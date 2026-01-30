@@ -1,0 +1,29 @@
+import { Link, useParams, useLocation } from "react-router-dom";
+
+export default function EntryFormPage() {
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const isNew = location.pathname === "/entry/new";
+
+  return (
+    <div className="p-6">
+      <div className="mb-4 text-sm text-slate-500">
+        🔒 Ruta protegida
+      </div>
+      <h1 className="text-2xl font-bold text-white mb-4">
+        EntryFormPage
+      </h1>
+      <p className="text-slate-400 mb-6">
+        {isNew ? "Crear nueva contraseña" : `Editar contraseña (id: ${id ?? "—"})`}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Link to="/vault" className="px-3 py-2 bg-blue-600 rounded text-sm">
+          Guardar y volver
+        </Link>
+        <Link to="/vault" className="px-3 py-2 bg-slate-700 rounded text-sm">
+          Cancelar
+        </Link>
+      </div>
+    </div>
+  );
+}
