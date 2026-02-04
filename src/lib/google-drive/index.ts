@@ -21,3 +21,14 @@ export {
   startAutoRefresh,
   stopAutoRefresh,
 } from "./token-manager.js";
+export {
+  findVaultFile,
+  createVaultFile,
+  readVaultFile,
+  updateVaultFile,
+  deleteVaultFile,
+  getOrCreateVault,
+  saveVault,
+  DriveApiError,
+} from "./drive-api.js";
+export type { DriveFile } from "./drive-api.js";

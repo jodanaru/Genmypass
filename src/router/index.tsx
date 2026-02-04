@@ -3,6 +3,7 @@ import { MainLayout } from "@/components/layout";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { Landing } from "@/pages";
 import {
+  AuthCallbackPage,
   ConnectCloudPage,
   SetupPasswordPage,
   SetupSecurityModePage,
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
   { path: "/setup/password", element: <SetupPasswordPage /> },
   { path: "/setup/security", element: <SetupSecurityModePage /> },
   { path: "/setup/secret-key", element: <SetupSecretKeyPage /> },
+  { path: "/auth/callback", element: <AuthCallbackPage /> },
 
   // Rutas especiales
   { path: "/lock", element: <LockScreenPage /> },

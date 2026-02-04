@@ -15,8 +15,14 @@ import type {
 } from "./types.js";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
-const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+
+function getOAuthProxyBase(): string {
+  return (
+    import.meta.env.VITE_OAUTH_PROXY_URL ??
+    (typeof window !== "undefined" ? window.location.origin : "")
+  );
+}
 
 /** Longitud del code_verifier en bytes (RFC 7636: 43–128 caracteres; 32 bytes → 43 chars base64url). */
 const CODE_VERIFIER_BYTES = 32;
@@ -135,18 +141,15 @@ export async function handleOAuthCallback(): Promise<OAuthCallbackResult> {
   }
 
   const redirectUri = `${window.location.origin}${OAUTH_CALLBACK_PATH}`;
-  const body = new URLSearchParams({
-    client_id: getClientId(),
-    code,
-    code_verifier: verifier,
-    grant_type: "authorization_code",
-    redirect_uri: redirectUri,
-  });
 
-  const response = await fetch(GOOGLE_TOKEN_URL, {
+  const response = await fetch(`${getOAuthProxyBase()}/api/auth/token`, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString(),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      code,
+      code_verifier: verifier,
+      redirect_uri: redirectUri,
+    }),
   });
 
   sessionStorage.removeItem(STORAGE_VERIFIER);

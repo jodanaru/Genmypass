@@ -70,7 +70,9 @@ export function getStoredRefreshToken(): string | null {
  * Llama al backend /api/auth/refresh con el refresh token y devuelve el nuevo access token.
  */
 export async function refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
-  const base = typeof window !== "undefined" ? window.location.origin : "";
+  const base =
+    import.meta.env.VITE_OAUTH_PROXY_URL ??
+    (typeof window !== "undefined" ? window.location.origin : "");
   const url = `${base}${REFRESH_ENDPOINT}`;
   const response = await fetch(url, {
     method: "POST",

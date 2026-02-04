@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HelpCircle, ShieldCheck, Moon, Sun } from "lucide-react";
-import { OnboardingProgress } from "@/components/onboarding";
 
 const SECURITY_MODE_KEY = "genmypass_security_mode";
 
@@ -31,25 +30,43 @@ export default function SetupSecurityModePage() {
     }
   };
 
+  const progressPercent = Math.round((3 / 4) * 100);
+
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--bg)] transition-colors duration-200">
-      <header className="w-full py-8 px-4 max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <img alt="Genmypass" className="w-8 h-8" src="/logo.png" />
-            <span className="font-bold text-xl text-slate-800 dark:text-white">
-              Genmypass
-            </span>
-          </div>
-          <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-            Step 3 of 4
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
+      <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-6 py-4 bg-white dark:bg-slate-900">
+        <div className="flex items-center gap-3">
+          <img alt="Genmypass" className="w-8 h-8" src="/logo.png" />
+          <span className="font-bold text-xl text-slate-900 dark:text-white tracking-tight">
+            Genmypass
           </span>
         </div>
-        <OnboardingProgress currentStep={3} totalSteps={4} />
       </header>
 
-      <main className="flex-1 flex flex-col items-center py-6 px-4 pb-20">
+      <main className="flex-1 flex flex-col items-center py-12 px-4 pb-20">
         <div className="w-full max-w-[640px] flex flex-col">
+          {/* Progress bar */}
+          <div className="flex flex-col gap-3 mb-8 w-full">
+            <div className="flex gap-6 justify-between items-end">
+              <p className="text-slate-900 dark:text-white text-base font-medium">
+                Step 3 of 4
+              </p>
+              <p className="text-slate-900 dark:text-white text-sm font-normal">
+                {progressPercent}%
+              </p>
+            </div>
+            <div className="rounded-full bg-slate-200 dark:bg-slate-800 h-2 w-full overflow-hidden">
+              <div
+                className="h-full rounded-full bg-primary-500 transition-all"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-normal">
+              Security Configuration
+            </p>
+          </div>
+
+          {/* Headline */}
           <div className="mb-10 text-center">
             <h1 className="text-slate-900 dark:text-white tracking-tight text-3xl font-bold leading-tight mb-2">
               Choose Security Level
@@ -61,11 +78,11 @@ export default function SetupSecurityModePage() {
 
           {/* Security options */}
           <div className="flex flex-col gap-4 mb-8">
-            {/* Password Only - Recommended */}
+            {/* Option 1: Password Only (Recommended) */}
             <button
               type="button"
               onClick={() => setSelectedMode("password-only")}
-              className={`relative text-left w-full p-6 rounded-xl transition-all shadow-sm border-2 ${
+              className={`relative group cursor-pointer text-left w-full p-6 rounded-xl transition-all shadow-sm border-2 ${
                 selectedMode === "password-only"
                   ? "border-primary-500 bg-primary-500/5 dark:bg-primary-500/10"
                   : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900"
@@ -93,11 +110,11 @@ export default function SetupSecurityModePage() {
               </div>
             </button>
 
-            {/* Dual-Key */}
+            {/* Option 2: Dual-Key */}
             <button
               type="button"
               onClick={() => setSelectedMode("dual-key")}
-              className={`relative text-left w-full p-6 rounded-xl transition-all shadow-sm border-2 ${
+              className={`relative group cursor-pointer text-left w-full p-6 rounded-xl transition-all shadow-sm border-2 ${
                 selectedMode === "dual-key"
                   ? "border-primary-500 bg-primary-500/5 dark:bg-primary-500/10"
                   : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900"
@@ -132,13 +149,13 @@ export default function SetupSecurityModePage() {
             </button>
           </div>
 
-          {/* Help link */}
+          {/* Help link & action */}
           <div className="flex flex-col items-center gap-6">
             <button
               type="button"
               className="flex items-center gap-2 text-primary-500 text-sm font-medium hover:underline group"
             >
-              <HelpCircle className="w-[18px] h-[18px] shrink-0" />
+              <HelpCircle className="w-[18px] h-[18px] shrink-0" aria-hidden />
               What&apos;s the difference?
             </button>
 
@@ -152,7 +169,7 @@ export default function SetupSecurityModePage() {
             </button>
           </div>
 
-          {/* Trust footer */}
+          {/* Zero-Knowledge banner */}
           <div className="mt-12 p-4 rounded-lg bg-slate-100 dark:bg-slate-800/50 flex items-center gap-4">
             <div className="flex-shrink-0 size-12 bg-white dark:bg-slate-700 rounded-lg flex items-center justify-center text-primary-500 shadow-sm">
               <ShieldCheck className="w-8 h-8" />

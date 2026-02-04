@@ -1,6 +1,7 @@
 export { Landing } from "./Landing";
 
 // Onboarding (rutas públicas)
+export { default as AuthCallbackPage } from "./onboarding/AuthCallbackPage";
 export { default as ConnectCloudPage } from "./onboarding/ConnectCloudPage";
 export { default as SetupPasswordPage } from "./onboarding/SetupPasswordPage";
 export { default as SetupSecurityModePage } from "./onboarding/SetupSecurityModePage";

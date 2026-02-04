@@ -10,6 +10,14 @@ import {
   Circle,
 } from "lucide-react";
 import { OnboardingProgress } from "@/components/onboarding";
+import { initSodium, deriveKeyWithNewSalt, encrypt, toBase64 } from "@/lib/crypto";
+import {
+  encryptRefreshToken,
+  storeRefreshToken,
+  saveVault,
+  getAccessToken,
+} from "@/lib/google-drive";
+import { useAuthStore } from "@/stores/auth-store";
 
 interface PasswordState {
   password: string;
@@ -22,12 +30,15 @@ const SYMBOL_REGEX = /[!@#$%^&*(),.?":{}|<>]/;
 
 export default function SetupPasswordPage() {
   const navigate = useNavigate();
+  const setMasterKey = useAuthStore((s) => s.setMasterKey);
   const [state, setState] = useState<PasswordState>({
     password: "",
     confirmPassword: "",
     showPassword: false,
     showConfirmPassword: false,
   });
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(
     () =>
       typeof document !== "undefined" &&
@@ -85,9 +96,66 @@ export default function SetupPasswordPage() {
     ],
   };
 
-  const handleContinue = () => {
-    if (canContinue) {
+  const handleContinue = async () => {
+    if (!canContinue || isProcessing) return;
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      await initSodium();
+
+      const { key: masterKey, salt } = deriveKeyWithNewSalt(state.password);
+
+      localStorage.setItem("genmypass_salt", toBase64(salt));
+      setMasterKey(masterKey);
+
+      const tempRefresh = sessionStorage.getItem("genmypass_temp_refresh");
+      if (tempRefresh) {
+        const encryptedRefresh = await encryptRefreshToken(tempRefresh, masterKey);
+        storeRefreshToken(encryptedRefresh);
+        sessionStorage.removeItem("genmypass_temp_refresh");
+      }
+
+      const emptyVault = {
+        version: 1,
+        entries: [],
+        folders: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const vaultJson = JSON.stringify(emptyVault);
+      const vaultBytes = new TextEncoder().encode(vaultJson);
+      const { iv, tag, data } = await encrypt({
+        key: masterKey,
+        plaintext: vaultBytes,
+      });
+
+      const encryptedVault = JSON.stringify({
+        iv: toBase64(iv),
+        tag: toBase64(tag),
+        data: toBase64(data),
+      });
+
+      if (!getAccessToken()) {
+        throw new Error("No hay sesión de Google Drive activa");
+      }
+
+      const fileId = await saveVault(encryptedVault);
+      localStorage.setItem("genmypass_vault_file_id", fileId);
+      localStorage.setItem("genmypass_setup_step", "password_created");
+
       navigate("/setup/security");
+    } catch (err) {
+      console.error("Error en setup:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Error al configurar tu cuenta. Inténtalo de nuevo."
+      );
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -123,6 +191,15 @@ export default function SetupPasswordPage() {
               only key to your vault.
             </p>
           </div>
+
+          {error && (
+            <div className="mb-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+              <div className="flex items-center gap-3 text-red-700 dark:text-red-400">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <span className="text-sm">{error}</span>
+              </div>
+            </div>
+          )}
 
           {/* Warning panel */}
           <div className="mb-8">
@@ -284,14 +361,40 @@ export default function SetupPasswordPage() {
               <button
                 type="button"
                 onClick={handleContinue}
-                disabled={!canContinue}
+                disabled={!canContinue || isProcessing}
                 className={`w-full font-bold py-4 rounded-xl text-lg transition-all shadow-lg ${
-                  canContinue
+                  canContinue && !isProcessing
                     ? "bg-primary-500 hover:bg-primary-600 text-white shadow-primary-500/20 cursor-pointer"
                     : "bg-primary-500/50 text-white cursor-not-allowed"
                 }`}
               >
-                Continue to Vault
+                {isProcessing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg
+                      className="animate-spin w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                    Creating your vault...
+                  </span>
+                ) : (
+                  "Continue to Vault"
+                )}
               </button>
               <p className="text-center text-slate-500 dark:text-slate-400 text-xs mt-4 leading-relaxed">
                 This password encrypts your vault locally on this device.

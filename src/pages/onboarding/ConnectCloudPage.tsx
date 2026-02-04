@@ -1,6 +1,6 @@
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { OnboardingProgress } from "@/components/onboarding";
+import { generatePKCE, initiateOAuthFlow } from "@/lib/google-drive/oauth";
 
 function GoogleDriveIcon() {
   return (
@@ -89,7 +89,8 @@ function ArrowForwardIcon() {
 }
 
 export default function ConnectCloudPage() {
-  const navigate = useNavigate();
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(
     () =>
       typeof document !== "undefined" &&
@@ -99,6 +100,20 @@ export default function ConnectCloudPage() {
   const toggleDarkMode = () => {
     document.documentElement.classList.toggle("dark");
     setIsDark(document.documentElement.classList.contains("dark"));
+  };
+
+  const handleGoogleDriveConnect = async () => {
+    try {
+      setError(null);
+      setIsConnecting(true);
+      const { verifier } = await generatePKCE();
+      await initiateOAuthFlow(verifier);
+      // La página se redirige a Google, no se ejecuta nada más
+    } catch (err) {
+      console.error("Error iniciando OAuth:", err);
+      setError("No se pudo conectar con Google Drive. Inténtalo de nuevo.");
+      setIsConnecting(false);
+    }
   };
 
   return (
@@ -133,6 +148,42 @@ export default function ConnectCloudPage() {
             </p>
           </div>
 
+          {error && (
+            <div className="mb-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 text-red-700 dark:text-red-400">
+                <svg
+                  className="w-5 h-5 shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span className="text-sm">{error}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setError(null)}
+                className="text-red-500 hover:text-red-700 dark:hover:text-red-300"
+                aria-label="Cerrar"
+              >
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          )}
+
           <div className="space-y-4">
             {/* Google Drive card */}
             <div className="bg-white dark:bg-slate-800 border-2 border-primary-500 p-6 rounded-xl shadow-sm relative transition-all hover:shadow-md group">
@@ -155,11 +206,40 @@ export default function ConnectCloudPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => navigate("/setup/password")}
-                  className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2.5 rounded-lg font-semibold transition-colors flex items-center gap-2 shrink-0"
+                  onClick={handleGoogleDriveConnect}
+                  disabled={isConnecting}
+                  className="bg-primary-500 hover:bg-primary-600 disabled:bg-primary-300 text-white px-6 py-2.5 rounded-lg font-semibold transition-colors flex items-center gap-2 shrink-0"
                 >
-                  Connect
-                  <ArrowForwardIcon />
+                  {isConnecting ? (
+                    <>
+                      <svg
+                        className="animate-spin w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                      </svg>
+                      Conectando...
+                    </>
+                  ) : (
+                    <>
+                      Connect
+                      <ArrowForwardIcon />
+                    </>
+                  )}
                 </button>
               </div>
             </div>

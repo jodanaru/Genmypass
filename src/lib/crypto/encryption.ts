@@ -36,7 +36,7 @@ export async function encrypt(options: EncryptOptions): Promise<Ciphertext> {
       name: ALGORITHM,
       iv,
       tagLength: GCM_TAG_LENGTH * 8,
-      additionalData,
+      ...(additionalData !== undefined && { additionalData }),
     },
     cryptoKey,
     plaintext
@@ -66,7 +66,7 @@ export async function decrypt(options: DecryptOptions): Promise<Uint8Array> {
       name: ALGORITHM,
       iv,
       tagLength: GCM_TAG_LENGTH * 8,
-      additionalData,
+      ...(additionalData !== undefined && { additionalData }),
     },
     cryptoKey,
     combined
