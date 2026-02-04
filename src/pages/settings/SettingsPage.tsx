@@ -57,7 +57,7 @@ export default function SettingsPage() {
   const handleDisconnect = () => {
     if (
       confirm(
-        "¿Estás seguro de que quieres desconectar Google Drive? Tendrás que volver a conectar para acceder a tu vault."
+        "Are you sure you want to disconnect Google Drive? You will need to connect again to access your vault."
       )
     ) {
       if (typeof localStorage !== "undefined") {
@@ -83,7 +83,7 @@ export default function SettingsPage() {
   };
 
   const showComingSoon = () => {
-    alert("Esta función estará disponible próximamente");
+    alert("This feature will be available soon");
   };
 
   return (
@@ -313,7 +313,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-2 gap-4">
               <label className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-transparent hover:border-primary-500/30 transition-all cursor-pointer">
                 <span className="text-sm font-medium text-slate-900 dark:text-white">
-                  Mayúsculas ABC…
+                  Uppercase ABC…
                 </span>
                 <input
                   type="checkbox"
@@ -324,7 +324,7 @@ export default function SettingsPage() {
               </label>
               <label className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-transparent hover:border-primary-500/30 transition-all cursor-pointer">
                 <span className="text-sm font-medium text-slate-900 dark:text-white">
-                  Minúsculas abc…
+                  Lowercase abc…
                 </span>
                 <input
                   type="checkbox"
@@ -335,7 +335,7 @@ export default function SettingsPage() {
               </label>
               <label className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-transparent hover:border-primary-500/30 transition-all cursor-pointer">
                 <span className="text-sm font-medium text-slate-900 dark:text-white">
-                  Números 123…
+                  Numbers 123…
                 </span>
                 <input
                   type="checkbox"
@@ -346,7 +346,7 @@ export default function SettingsPage() {
               </label>
               <label className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-transparent hover:border-primary-500/30 transition-all cursor-pointer">
                 <span className="text-sm font-medium text-slate-900 dark:text-white">
-                  Símbolos !@#…
+                  Symbols !@#…
                 </span>
                 <input
                   type="checkbox"
@@ -360,10 +360,10 @@ export default function SettingsPage() {
             <label className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-transparent hover:border-primary-500/30 transition-all cursor-pointer block">
               <div>
                 <span className="text-sm font-medium text-slate-900 dark:text-white block">
-                  Excluir ambiguos
+                  Exclude ambiguous
                 </span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  Ej: i, I, 1, L, o, 0, O
+                  E.g. i, I, 1, L, o, 0, O
                 </span>
               </div>
               <input
@@ -378,7 +378,7 @@ export default function SettingsPage() {
 
             <label className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-transparent hover:border-primary-500/30 transition-all cursor-pointer">
               <span className="text-sm font-medium text-slate-900 dark:text-white">
-                Permitir duplicados
+                Allow duplicates
               </span>
               <input
                 type="checkbox"
