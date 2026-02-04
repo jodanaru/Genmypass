@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
-import { MainLayout } from "@/components/layout";
+import { MainLayout, VaultAppLayout } from "@/components/layout";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { Landing } from "@/pages";
 import {
@@ -45,17 +45,24 @@ export const router = createBrowserRouter([
   { path: "/offline", element: <OfflinePage /> },
   { path: "/error", element: <ErrorPage /> },
 
-  // Rutas protegidas (con MainLayout)
+  // Rutas protegidas con bottom nav (sin MainLayout)
+  {
+    element: <VaultAppLayout />,
+    children: [
+      { path: "vault", element: <VaultPage /> },
+      { path: "generator", element: <GeneratorPage /> },
+      { path: "settings", element: <SettingsPage /> },
+    ],
+  },
+
+  // Rutas protegidas con MainLayout (sidebar)
   {
     element: <ProtectedLayout />,
     children: [
-      { path: "vault", element: <VaultPage /> },
       { path: "entry/:id", element: <EntryDetailPage /> },
       { path: "entry/new", element: <EntryFormPage /> },
       { path: "entry/:id/edit", element: <EntryFormPage /> },
-      { path: "generator", element: <GeneratorPage /> },
       { path: "search", element: <SearchPage /> },
-      { path: "settings", element: <SettingsPage /> },
       { path: "settings/password", element: <ChangePasswordPage /> },
       { path: "folders", element: <FoldersPage /> },
     ],

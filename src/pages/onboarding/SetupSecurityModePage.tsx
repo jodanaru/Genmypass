@@ -24,7 +24,7 @@ export default function SetupSecurityModePage() {
     localStorage.setItem(SECURITY_MODE_KEY, selectedMode);
 
     if (selectedMode === "password-only") {
-      navigate("/");
+      navigate("/vault");
     } else {
       navigate("/setup/secret-key");
     }

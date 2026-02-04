@@ -100,7 +100,7 @@ Generated: ${new Date().toISOString()}
     if (!canComplete) return;
     localStorage.setItem("genmypass_setup_complete", "true");
     localStorage.setItem("genmypass_has_secret_key", "true");
-    navigate("/");
+    navigate("/vault");
   };
 
   return (

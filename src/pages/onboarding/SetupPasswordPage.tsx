@@ -133,6 +133,7 @@ export default function SetupPasswordPage() {
       });
 
       const encryptedVault = JSON.stringify({
+        salt: toBase64(salt),
         iv: toBase64(iv),
         tag: toBase64(tag),
         data: toBase64(data),
@@ -145,6 +146,7 @@ export default function SetupPasswordPage() {
       const fileId = await saveVault(encryptedVault);
       localStorage.setItem("genmypass_vault_file_id", fileId);
       localStorage.setItem("genmypass_setup_step", "password_created");
+      sessionStorage.setItem("genmypass_just_setup", "true");
 
       navigate("/setup/security");
     } catch (err) {

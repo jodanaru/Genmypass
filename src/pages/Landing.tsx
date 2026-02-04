@@ -1,9 +1,13 @@
 /**
- * Landing: hero, feature cards, CTA y footer (según diseño Stitch).
- * Sin cabecera ni sidebar; icono modo oscuro en esquina superior derecha del main.
+ * Landing: hero, feature cards, CTA y footer.
+ * Redirige a /vault si está desbloqueado, a /lock si ya tiene vault configurado,
+ * o muestra la landing para usuarios nuevos.
  */
 
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ShieldCheck, Check } from "lucide-react";
+import { useAuthStore } from "@/stores/auth-store";
 
 function toggleDarkMode() {
   document.documentElement.classList.toggle("dark");
@@ -11,10 +15,34 @@ function toggleDarkMode() {
 
 export function Landing() {
   const navigate = useNavigate();
+  const isUnlocked = useAuthStore((s) => s.isUnlocked);
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    if (isUnlocked) {
+      navigate("/vault", { replace: true });
+      return;
+    }
+
+    const hasVault = localStorage.getItem("genmypass_vault_file_id");
+
+    if (hasVault) {
+      navigate("/lock", { replace: true });
+    } else {
+      setIsChecking(false);
+    }
+  }, [navigate, isUnlocked]);
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center bg-hero-gradient px-6 py-12 text-center">
-      {/* Modo oscuro: esquina superior derecha del contenido principal */}
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900">
       <button
         type="button"
         onClick={toggleDarkMode}
@@ -23,98 +51,83 @@ export function Landing() {
       >
         <span className="material-icons-round">dark_mode</span>
       </button>
-      {/* Hero: logo + título */}
-      <div className="flex flex-col items-center space-y-4 pt-6">
-        <div className="relative h-32 w-32 md:h-40 md:w-40 animate-pulse-slow">
-          <img
-            src="/logo.png"
-            alt="Genmypass"
-            className="h-full w-full object-contain"
-          />
+
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+        <div className="max-w-md w-full text-center">
+          <div className="w-20 h-20 bg-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-primary-500/30">
+            <ShieldCheck className="w-10 h-10 text-white" />
+          </div>
+
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
+            Genmypass
+          </h1>
+
+          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8">
+            Zero-knowledge password manager. Your passwords, encrypted in your
+            cloud.
+          </p>
+
+          <div className="space-y-4 mb-10 text-left">
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <p className="font-medium text-slate-900 dark:text-white">
+                  Zero-Knowledge
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  We never see your passwords
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <p className="font-medium text-slate-900 dark:text-white">
+                  Your Cloud Storage
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Data stored in your Google Drive
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <p className="font-medium text-slate-900 dark:text-white">
+                  AES-256 Encryption
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Military-grade security
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate("/connect")}
+            className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-4 px-6 rounded-xl text-lg transition-colors shadow-lg shadow-primary-500/30"
+          >
+            Get Started
+          </button>
+
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+            Free forever. No credit card required.
+          </p>
         </div>
-        <h1 className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-4xl font-bold tracking-tight text-transparent dark:from-blue-400 dark:to-blue-200 md:text-5xl">
-          Genmypass
-        </h1>
-      </div>
+      </main>
 
-      {/* Tagline + subtítulo */}
-      <div className="max-w-2xl space-y-4">
-        <h2 className="text-3xl font-extrabold leading-tight text-slate-800 dark:text-white md:text-4xl">
-          Your passwords, your cloud, zero knowledge.
-        </h2>
-        <p className="text-lg text-slate-600 dark:text-slate-400">
-          The secure way to manage your digital life without ever trusting a third
-          party with your master key.
-        </p>
-      </div>
-
-      {/* Feature cards */}
-      <div className="mt-8 grid w-full max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
-        <Card
-          icon="lock"
-          title="Bank-level encryption"
-          description="AES-256 encryption secures your vault before it ever leaves your device."
-        />
-        <Card
-          icon="cloud"
-          title="Stored in YOUR Google Drive"
-          description="You own the storage. We don't host your data; your private cloud does."
-        />
-        <Card
-          icon="visibility_off"
-          title="Zero-knowledge"
-          description="We can't see your passwords. Only you hold the key to unlock your vault."
-        />
-      </div>
-
-      {/* CTA */}
-      <div className="flex flex-col items-center space-y-6 pt-8">
-        <button
-          type="button"
-          onClick={() => navigate("/connect")}
-          className="btn-gradient w-full rounded-full px-10 py-4 text-lg font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:shadow-blue-500/50 active:scale-95 md:w-64"
-        >
-          Get Started
-        </button>
-        <a
-          href="#"
-          className="group flex items-center font-medium text-primary-500 hover:underline"
-        >
-          How it works
-          <span className="material-icons-round ml-1 text-sm transition-transform group-hover:translate-x-1">
-            arrow_forward
-          </span>
-        </a>
-      </div>
-
-      {/* Footer */}
-      <div className="mt-auto pt-12 opacity-50 md:pt-8">
-        <p className="text-xs text-slate-400 dark:text-slate-600">
-          © 2024 Genmypass. Security by design.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function Card({
-  icon,
-  title,
-  description,
-}: {
-  icon: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex flex-col items-center rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-transform hover:-translate-y-1 dark:border-slate-700 dark:bg-slate-800/50">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-        <span className="material-icons-round text-primary-500">{icon}</span>
-      </div>
-      <h3 className="mb-2 text-lg font-semibold text-[var(--text)]">{title}</h3>
-      <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-        {description}
-      </p>
+      <footer className="py-6 text-center text-slate-400 dark:text-slate-500 text-sm">
+        <p>© 2024 Genmypass. Made with ❤️ for your security.</p>
+      </footer>
     </div>
   );
 }
