@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, Eye, EyeOff, Shield } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
-import { readVaultFile, getAccessToken, startAutoRefresh } from "@/lib/google-drive";
+import {
+  readVaultFile,
+  getAccessToken,
+  startAutoRefresh,
+  deleteVaultFile,
+} from "@/lib/google-drive";
 import {
   initSodium,
   deriveKey,
@@ -13,11 +18,20 @@ import {
 const NO_TOKEN_MESSAGE =
   "Google Drive session expired. Reconnect your account to unlock your vault.";
 
+const CONFIG_NOT_FOUND_MESSAGE =
+  "Configuración del vault no encontrada. Configura tu cuenta de nuevo.";
+
 interface EncryptedVault {
   salt?: string;
   iv: string;
   tag: string;
   data: string;
+}
+
+function clearVaultState() {
+  if (typeof localStorage === "undefined") return;
+  localStorage.removeItem("genmypass_vault_file_id");
+  localStorage.removeItem("genmypass_salt");
 }
 
 export default function LockScreenPage() {
@@ -27,15 +41,20 @@ export default function LockScreenPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsSetupAgain, setNeedsSetupAgain] = useState(false);
 
   const needsReconnect = error === NO_TOKEN_MESSAGE;
 
   useEffect(() => {
     const fileId = localStorage.getItem("genmypass_vault_file_id");
+    if (!fileId) {
+      navigate("/", { replace: true });
+      return;
+    }
     if (fileId && !getAccessToken()) {
       setError(NO_TOKEN_MESSAGE);
     }
-  }, []);
+  }, [navigate]);
 
   const handleReconnect = () => {
     setError(null);
@@ -56,7 +75,11 @@ export default function LockScreenPage() {
     try {
       const fileId = localStorage.getItem("genmypass_vault_file_id");
       if (!fileId) {
-        setError("No se encontró el vault. Vuelve a conectar tu cuenta.");
+        clearVaultState();
+        setNeedsSetupAgain(true);
+        setError(
+          "No se encontró el vault. Configura tu cuenta de nuevo."
+        );
         return;
       }
 
@@ -67,9 +90,13 @@ export default function LockScreenPage() {
       const saltBase64 =
         encrypted.salt ?? localStorage.getItem("genmypass_salt");
       if (!saltBase64) {
-        setError(
-          "Configuración del vault no encontrada. Configura tu cuenta de nuevo."
+        sessionStorage.setItem(
+          "genmypass_vault_file_to_delete",
+          fileId
         );
+        clearVaultState();
+        setNeedsSetupAgain(true);
+        setError(CONFIG_NOT_FOUND_MESSAGE);
         return;
       }
 
@@ -95,7 +122,26 @@ export default function LockScreenPage() {
       const isNoToken =
         message === "No hay token de acceso disponible" ||
         (message.includes("token") && message.includes("disponible"));
-      setError(isNoToken ? NO_TOKEN_MESSAGE : message);
+      const isFileGone =
+        message.includes("404") ||
+        message.includes("not found") ||
+        message.includes("No se encontró");
+      if (isFileGone) {
+        const fileIdToDelete = localStorage.getItem(
+          "genmypass_vault_file_id"
+        );
+        if (fileIdToDelete) {
+          sessionStorage.setItem(
+            "genmypass_vault_file_to_delete",
+            fileIdToDelete
+          );
+        }
+        clearVaultState();
+        setNeedsSetupAgain(true);
+        setError("El vault ya no existe. Configura tu cuenta de nuevo.");
+      } else {
+        setError(isNoToken ? NO_TOKEN_MESSAGE : message);
+      }
     } finally {
       setIsUnlocking(false);
     }
@@ -137,6 +183,37 @@ export default function LockScreenPage() {
                   className="mt-3 w-full h-12 rounded-xl font-semibold text-sm text-white bg-primary-500 hover:bg-primary-600 transition-colors"
                 >
                   Reconnect Google Drive
+                </button>
+              )}
+              {needsSetupAgain && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    localStorage.setItem(
+                      "genmypass_force_new_setup",
+                      "true"
+                    );
+                    const fileIdToDelete = sessionStorage.getItem(
+                      "genmypass_vault_file_to_delete"
+                    );
+                    if (fileIdToDelete && getAccessToken()) {
+                      try {
+                        await deleteVaultFile(fileIdToDelete);
+                      } catch {
+                        // Ignore: AuthCallbackPage will use the flag
+                      }
+                      sessionStorage.removeItem(
+                        "genmypass_vault_file_to_delete"
+                      );
+                    }
+                    clearVaultState();
+                    setError(null);
+                    setNeedsSetupAgain(false);
+                    navigate("/", { replace: true });
+                  }}
+                  className="mt-3 w-full h-12 rounded-xl font-semibold text-sm text-white bg-primary-500 hover:bg-primary-600 transition-colors"
+                >
+                  Configurar de nuevo
                 </button>
               )}
             </div>

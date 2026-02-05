@@ -307,6 +307,7 @@ export async function importFromCSV(file: File): Promise<ImportResult> {
   const passIdx = headerLower.findIndex((h) => h === "password");
   const notesIdx = headerLower.findIndex((h) => h === "notes");
   const folderIdx = headerLower.findIndex((h) => h === "folder");
+  const favoriteIdx = headerLower.findIndex((h) => h === "favorite");
 
   if (nameIdx < 0 || passIdx < 0) {
     errors.push("CSV must have at least 'name' and 'password' columns");
@@ -325,6 +326,13 @@ export async function importFromCSV(file: File): Promise<ImportResult> {
     const password = sanitize(cells[passIdx] ?? "");
     const notes = sanitize(cells[notesIdx] ?? "");
     const folderName = sanitize(cells[folderIdx] ?? "");
+    const favoriteCell =
+      favoriteIdx >= 0 ? String(cells[favoriteIdx] ?? "").trim().toLowerCase() : "";
+    const favorite =
+      favoriteIdx >= 0 &&
+      (favoriteCell === "1" ||
+        favoriteCell === "true" ||
+        favoriteCell === "yes");
 
     if (!title && !username && !password) continue;
 
@@ -349,7 +357,7 @@ export async function importFromCSV(file: File): Promise<ImportResult> {
       url: url || undefined,
       notes: notes || undefined,
       folderId,
-      favorite: false,
+      favorite,
       createdAt: now(),
       updatedAt: now(),
     });

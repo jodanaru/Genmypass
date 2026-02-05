@@ -21,6 +21,7 @@ import { useSettingsStore, type AutoLockTime } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useVaultStore } from "@/stores/vault-store";
 import { clearSessionTokens, deleteVaultFile } from "@/lib/google-drive";
+import { clearAllGenmypassStorage } from "@/lib/clear-vault-data";
 import { formatRelative } from "@/lib/format-relative";
 
 export default function SettingsPage() {
@@ -96,8 +97,7 @@ export default function SettingsPage() {
       }
 
       clearSessionTokens();
-      if (typeof localStorage !== "undefined") localStorage.clear();
-      if (typeof sessionStorage !== "undefined") sessionStorage.clear();
+      clearAllGenmypassStorage();
       useVaultStore.getState().clear();
       lock();
       setShowDeleteConfirm(false);
@@ -115,8 +115,7 @@ export default function SettingsPage() {
 
   const handleDeleteLocalOnly = () => {
     clearSessionTokens();
-    if (typeof localStorage !== "undefined") localStorage.clear();
-    if (typeof sessionStorage !== "undefined") sessionStorage.clear();
+    clearAllGenmypassStorage();
     useVaultStore.getState().clear();
     lock();
     setShowDeleteConfirm(false);

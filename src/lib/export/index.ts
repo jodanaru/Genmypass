@@ -83,7 +83,7 @@ export async function exportVaultEncrypted(
  * No incluye settings, master password ni salt.
  */
 export function exportVaultCSV(vault: Vault): Blob {
-  const header = "name,url,username,password,notes,folder";
+  const header = "name,url,username,password,notes,folder,favorite";
   const folderById = new Map<string, Folder>(
     vault.folders.map((f) => [f.id, f])
   );
@@ -101,6 +101,7 @@ export function exportVaultCSV(vault: Vault): Blob {
         escapeCsvField(e.password),
         escapeCsvField(e.notes ?? ""),
         escapeCsvField(folderName),
+        e.favorite ? "1" : "0",
       ].join(",")
     );
   }

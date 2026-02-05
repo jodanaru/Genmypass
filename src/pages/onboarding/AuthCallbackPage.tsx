@@ -44,6 +44,8 @@ export default function AuthCallbackPage() {
         setStatusMessage("Buscando tu vault...");
 
         const existingVault = await findVaultFile();
+        const forceNewSetup =
+          localStorage.getItem("genmypass_force_new_setup") === "true";
 
         window.history.replaceState(
           {},
@@ -51,7 +53,11 @@ export default function AuthCallbackPage() {
           window.location.pathname
         );
 
-        if (existingVault) {
+        if (forceNewSetup) {
+          localStorage.removeItem("genmypass_force_new_setup");
+        }
+
+        if (existingVault && !forceNewSetup) {
           localStorage.setItem("genmypass_vault_file_id", existingVault.id);
           localStorage.setItem("genmypass_oauth_complete", "true");
 

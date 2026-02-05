@@ -25,8 +25,10 @@ export function Landing() {
     }
 
     const hasVault = localStorage.getItem("genmypass_vault_file_id");
+    const forceNewSetup =
+      localStorage.getItem("genmypass_force_new_setup") === "true";
 
-    if (hasVault) {
+    if (hasVault && !forceNewSetup) {
       navigate("/lock", { replace: true });
     } else {
       setIsChecking(false);
@@ -118,10 +120,6 @@ export function Landing() {
           >
             Get Started
           </button>
-
-          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-            Free forever. No credit card required.
-          </p>
         </div>
       </main>
 
