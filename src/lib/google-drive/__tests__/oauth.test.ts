@@ -171,7 +171,8 @@ describe("handleOAuthCallback", () => {
     if (!result.success) expect(result.error).toBe("missing_code");
   });
 
-  it("intercambia code por tokens y limpia sessionStorage", async () => {
+  it("intercambia code por tokens vía proxy y limpia sessionStorage", async () => {
+    vi.stubEnv("VITE_OAUTH_PROXY_URL", "http://oauth-proxy.test");
     sessionStorage.setItem(STORAGE_VERIFIER, "my-verifier");
     sessionStorage.setItem(STORAGE_STATE, "my-state");
     setLocationSearch("?code=auth-code-123&state=my-state");
@@ -199,18 +200,17 @@ describe("handleOAuthCallback", () => {
     expect(sessionStorage.getItem(STORAGE_STATE)).toBeNull();
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://oauth2.googleapis.com/token",
+      "http://oauth-proxy.test/api/auth/token",
       expect.objectContaining({
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        headers: { "Content-Type": "application/json" },
       })
     );
     const callBody = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]![1]!.body as string;
-    expect(callBody).toContain("client_id=");
-    expect(callBody).toContain("code=auth-code-123");
-    expect(callBody).toContain("code_verifier=my-verifier");
-    expect(callBody).toContain("grant_type=authorization_code");
-    expect(callBody).toContain("redirect_uri=");
+    const bodyJson = JSON.parse(callBody);
+    expect(bodyJson.code).toBe("auth-code-123");
+    expect(bodyJson.code_verifier).toBe("my-verifier");
+    expect(bodyJson.redirect_uri).toBe("http://localhost:5173/auth/callback");
   });
 
   it("devuelve error si el endpoint de tokens falla", async () => {

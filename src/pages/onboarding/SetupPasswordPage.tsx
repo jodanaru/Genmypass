@@ -17,6 +17,7 @@ import {
   saveVault,
   getAccessToken,
 } from "@/lib/google-drive";
+import { DEFAULT_USER_SETTINGS } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
 
 interface PasswordState {
@@ -121,6 +122,7 @@ export default function SetupPasswordPage() {
         version: 1,
         entries: [],
         folders: [],
+        settings: DEFAULT_USER_SETTINGS,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };

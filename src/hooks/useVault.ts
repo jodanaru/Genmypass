@@ -1,6 +1,10 @@
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth-store";
+import {
+  getSettingsForVault,
+  useSettingsStore,
+} from "@/stores/settings-store";
 import { useVaultStore, type Vault } from "@/stores/vault-store";
 import { readVaultFile, saveVault } from "@/lib/google-drive";
 import { decrypt, encrypt, fromBase64, toBase64 } from "@/lib/crypto";
@@ -68,6 +72,9 @@ export function useVault() {
           new TextDecoder().decode(decrypted)
         );
         setVault(vaultData, storedFileId);
+        if (vaultData.settings) {
+          useSettingsStore.getState().setSettingsFromVault(vaultData.settings);
+        }
       } catch (err) {
         console.error("Error loading vault:", err);
         setError("Error al cargar el vault. Verifica tu conexión.");
@@ -91,7 +98,8 @@ export function useVault() {
     if (!vault || !masterKey || !fileId) return;
 
     try {
-      const vaultJson = JSON.stringify(vault);
+      const payload = { ...vault, settings: getSettingsForVault() };
+      const vaultJson = JSON.stringify(payload);
       const vaultBytes = new TextEncoder().encode(vaultJson);
       const { iv, tag, data } = await encrypt({
         key: masterKey,

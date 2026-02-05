@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { UserSettings } from "@/stores/settings-store";
 
 export interface VaultEntry {
   id: string;
@@ -23,6 +24,7 @@ export interface Vault {
   version: number;
   entries: VaultEntry[];
   folders: Folder[];
+  settings?: UserSettings;
   createdAt: string;
   updatedAt: string;
 }
