@@ -71,7 +71,7 @@ export function useVault() {
         const vaultData: Vault = JSON.parse(
           new TextDecoder().decode(decrypted)
         );
-        setVault(vaultData, storedFileId);
+        setVault(vaultData, storedFileId, encrypted.salt ?? null);
         if (vaultData.settings) {
           useSettingsStore.getState().setSettingsFromVault(vaultData.settings);
         }
@@ -95,10 +95,14 @@ export function useVault() {
   ]);
 
   const save = useCallback(async () => {
-    if (!vault || !masterKey || !fileId) return;
+    const state = useVaultStore.getState();
+    const currentVault = state.vault;
+    const currentFileId = state.fileId;
+    const currentSalt = state.vaultFileSalt;
+    if (!currentVault || !masterKey || !currentFileId) return;
 
     try {
-      const payload = { ...vault, settings: getSettingsForVault() };
+      const payload = { ...currentVault, settings: getSettingsForVault() };
       const vaultJson = JSON.stringify(payload);
       const vaultBytes = new TextEncoder().encode(vaultJson);
       const { iv, tag, data } = await encrypt({
@@ -107,17 +111,18 @@ export function useVault() {
       });
 
       const encryptedVault = JSON.stringify({
+        ...(currentSalt ? { salt: currentSalt } : {}),
         iv: toBase64(iv),
         tag: toBase64(tag),
         data: toBase64(data),
       });
 
-      await saveVault(encryptedVault, fileId);
+      await saveVault(encryptedVault, currentFileId);
     } catch (err) {
       console.error("Error saving vault:", err);
       throw err;
     }
-  }, [vault, masterKey, fileId]);
+  }, [masterKey]);
 
   return {
     vault,

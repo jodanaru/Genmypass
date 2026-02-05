@@ -34,8 +34,10 @@ interface VaultState {
   isLoading: boolean;
   error: string | null;
   fileId: string | null;
+  /** Salt en base64 del archivo del vault (para reescribir al guardar). */
+  vaultFileSalt: string | null;
 
-  setVault: (vault: Vault, fileId: string) => void;
+  setVault: (vault: Vault, fileId: string, vaultFileSalt?: string | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
 
@@ -57,8 +59,10 @@ export const useVaultStore = create<VaultState>((set) => ({
   isLoading: false,
   error: null,
   fileId: null,
+  vaultFileSalt: null,
 
-  setVault: (vault, fileId) => set({ vault, fileId, error: null }),
+  setVault: (vault, fileId, vaultFileSalt = null) =>
+    set({ vault, fileId, vaultFileSalt, error: null }),
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error, isLoading: false }),
 
@@ -124,15 +128,23 @@ export const useVaultStore = create<VaultState>((set) => ({
     })),
 
   deleteFolder: (id) =>
-    set((state) => ({
-      vault: state.vault
-        ? {
-            ...state.vault,
-            folders: state.vault.folders.filter((f) => f.id !== id),
-            updatedAt: new Date().toISOString(),
-          }
-        : null,
-    })),
+    set((state) => {
+      if (!state.vault) return state;
+      const updatedEntries = state.vault.entries.map((e) =>
+        e.folderId === id
+          ? { ...e, folderId: undefined, updatedAt: new Date().toISOString() }
+          : e
+      );
+      return {
+        ...state,
+        vault: {
+          ...state.vault,
+          entries: updatedEntries,
+          folders: state.vault.folders.filter((f) => f.id !== id),
+          updatedAt: new Date().toISOString(),
+        },
+      };
+    }),
 
   toggleFavorite: (id) =>
     set((state) => ({
@@ -149,5 +161,6 @@ export const useVaultStore = create<VaultState>((set) => ({
         : null,
     })),
 
-  clear: () => set({ vault: null, fileId: null, error: null }),
+  clear: () =>
+    set({ vault: null, fileId: null, vaultFileSalt: null, error: null }),
 }));

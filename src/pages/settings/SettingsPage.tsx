@@ -13,10 +13,12 @@ import {
   Upload,
   Download,
   Trash2,
+  Folder,
 } from "lucide-react";
 import { useSettingsStore, type AutoLockTime } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useVaultStore } from "@/stores/vault-store";
+import { clearSessionTokens } from "@/lib/google-drive";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -60,6 +62,7 @@ export default function SettingsPage() {
         "Are you sure you want to disconnect Google Drive? You will need to connect again to access your vault."
       )
     ) {
+      clearSessionTokens();
       if (typeof localStorage !== "undefined") {
         localStorage.removeItem("genmypass_vault_file_id");
         localStorage.removeItem("ert");
@@ -73,6 +76,7 @@ export default function SettingsPage() {
   const handleDeleteVault = () => {
     if (deleteConfirmText !== "DELETE") return;
 
+    clearSessionTokens();
     if (typeof localStorage !== "undefined") localStorage.clear();
     if (typeof sessionStorage !== "undefined") sessionStorage.clear();
     useVaultStore.getState().clear();
@@ -240,6 +244,28 @@ export default function SettingsPage() {
                 </p>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">
                   Update your vault&apos;s encryption key
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400 shrink-0" />
+          </button>
+
+          {/* Categories */}
+          <button
+            type="button"
+            onClick={() => navigate("/settings/folders")}
+            className="w-full flex items-center gap-4 px-6 py-4 justify-between border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors text-left"
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-primary-500 flex items-center justify-center rounded-lg bg-primary-500/10 shrink-0 w-12 h-12">
+                <Folder className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-slate-900 dark:text-white font-medium">
+                  Categories
+                </p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                  Create and manage categories to organize passwords
                 </p>
               </div>
             </div>

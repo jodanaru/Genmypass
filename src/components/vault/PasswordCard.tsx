@@ -1,4 +1,4 @@
-import { Copy, ChevronRight, Star } from "lucide-react";
+import { Copy, Check, ChevronRight, Star } from "lucide-react";
 
 interface PasswordCardProps {
   id: string;
@@ -8,8 +8,10 @@ interface PasswordCardProps {
   iconBgColor?: string;
   isFavorite?: boolean;
   lastUsed?: string;
+  copySuccess?: boolean;
   onCopy: () => void;
   onClick: () => void;
+  onFavoriteClick?: () => void;
 }
 
 export function PasswordCard({
@@ -18,8 +20,10 @@ export function PasswordCard({
   iconBgColor = "bg-slate-100 dark:bg-slate-800",
   isFavorite = false,
   lastUsed = "Never",
+  copySuccess = false,
   onCopy,
   onClick,
+  onFavoriteClick,
 }: PasswordCardProps) {
   return (
     <div
@@ -47,11 +51,32 @@ export function PasswordCard({
             <p className="text-slate-900 dark:text-white text-base font-bold truncate">
               {title}
             </p>
-            {isFavorite && (
-              <Star
-                className="w-4 h-4 text-primary-500 fill-primary-500 shrink-0"
-                aria-hidden
-              />
+            {onFavoriteClick ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFavoriteClick();
+                }}
+                className={`p-1 rounded-lg transition-colors shrink-0 -m-1 ${
+                  isFavorite
+                    ? "text-primary-500 fill-primary-500 hover:bg-primary-500/10"
+                    : "text-slate-400 hover:text-primary-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+              >
+                <Star
+                  className={`w-4 h-4 ${isFavorite ? "fill-primary-500" : ""}`}
+                  aria-hidden
+                />
+              </button>
+            ) : (
+              isFavorite && (
+                <Star
+                  className="w-4 h-4 text-primary-500 fill-primary-500 shrink-0"
+                  aria-hidden
+                />
+              )
             )}
           </div>
           <p className="text-slate-500 dark:text-slate-400 text-sm truncate">
@@ -69,10 +94,18 @@ export function PasswordCard({
             e.stopPropagation();
             onCopy();
           }}
-          className="text-slate-400 hover:text-primary-500 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-          aria-label="Copy password"
+          className={`p-2 rounded-lg transition-colors ${
+            copySuccess
+              ? "text-primary-500"
+              : "text-slate-400 hover:text-primary-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+          }`}
+          aria-label={copySuccess ? "Copied!" : "Copy password"}
         >
-          <Copy className="w-5 h-5" />
+          {copySuccess ? (
+            <Check className="w-5 h-5" />
+          ) : (
+            <Copy className="w-5 h-5" />
+          )}
         </button>
         <ChevronRight
           className="w-5 h-5 text-slate-300 dark:text-slate-600"

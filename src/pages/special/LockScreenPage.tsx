@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, Eye, EyeOff, Shield } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
-import { readVaultFile, getAccessToken } from "@/lib/google-drive";
+import { readVaultFile, getAccessToken, startAutoRefresh } from "@/lib/google-drive";
 import {
   initSodium,
   deriveKey,
@@ -86,6 +86,7 @@ export default function LockScreenPage() {
       });
 
       setMasterKey(key);
+      startAutoRefresh(key);
       navigate("/vault", { replace: true });
     } catch (err) {
       console.error("Unlock error:", err);

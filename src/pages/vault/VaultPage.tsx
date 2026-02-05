@@ -11,7 +11,9 @@ import {
 import { PasswordCard, FolderChips } from "@/components/vault";
 import { useVault } from "@/hooks/useVault";
 import { useClipboard } from "@/hooks/useClipboard";
+import { useVaultStore } from "@/stores/vault-store";
 import type { VaultEntry, Folder } from "@/stores/vault-store";
+import { getCategoryBgClass, UNCATEGORIZED_BG } from "@/lib/category-colors";
 
 type FilterTab = "all" | "favorites" | "recent";
 
@@ -21,26 +23,11 @@ interface VaultPageState {
   selectedFolderId: string | null;
 }
 
-const getEntryColor = (title: string): string => {
-  const colors = [
-    "bg-blue-50 dark:bg-blue-900/30",
-    "bg-red-50 dark:bg-red-900/30",
-    "bg-green-50 dark:bg-green-900/30",
-    "bg-orange-50 dark:bg-orange-900/30",
-    "bg-purple-50 dark:bg-purple-900/30",
-    "bg-pink-50 dark:bg-pink-900/30",
-    "bg-yellow-50 dark:bg-yellow-900/30",
-    "bg-cyan-50 dark:bg-cyan-900/30",
-  ];
-
-  let hash = 0;
-  for (let i = 0; i < title.length; i++) {
-    hash = title.charCodeAt(i) + ((hash << 5) - hash);
-  }
-
-  const idx = Math.abs(hash) % colors.length;
-  return colors[idx] ?? "bg-slate-100 dark:bg-slate-800";
-};
+function getEntryIconBg(entry: VaultEntry, folders: Folder[]): string {
+  if (!entry.folderId) return UNCATEGORIZED_BG;
+  const folder = folders.find((f) => f.id === entry.folderId);
+  return folder ? getCategoryBgClass(folder.color) : UNCATEGORIZED_BG;
+}
 
 const formatLastUsed = (dateStr: string): string => {
   const date = new Date(dateStr);
@@ -64,14 +51,16 @@ function buildFolderChips(folders: Folder[]): { id: string; name: string }[] {
 
 export default function VaultPage() {
   const navigate = useNavigate();
-  const { entries, folders, isLoading, error } = useVault();
+  const { entries, folders, isLoading, error, save } = useVault();
   const { copy } = useClipboard();
+  const toggleFavorite = useVaultStore((s) => s.toggleFavorite);
 
   const [state, setState] = useState<VaultPageState>({
     searchQuery: "",
     activeTab: "all",
     selectedFolderId: null,
   });
+  const [copiedEntryId, setCopiedEntryId] = useState<string | null>(null);
 
   const filteredEntries = useMemo(() => {
     let result = entries;
@@ -113,15 +102,25 @@ export default function VaultPage() {
     [folders]
   );
 
-  const handleCopy = async (password: string) => {
+  const handleCopy = async (entryId: string, password: string) => {
     const success = await copy(password);
     if (success) {
-      // TODO: Toast de confirmación
+      setCopiedEntryId(entryId);
+      setTimeout(() => setCopiedEntryId(null), 5000);
     }
   };
 
   const handleLock = () => {
     navigate("/lock");
+  };
+
+  const handleFavoriteClick = async (entryId: string) => {
+    toggleFavorite(entryId);
+    try {
+      await save();
+    } catch (err) {
+      console.error("Error saving favorite:", err);
+    }
   };
 
   if (isLoading) {
@@ -308,11 +307,13 @@ export default function VaultPage() {
                 id={entry.id}
                 title={entry.title}
                 username={entry.username}
-                iconBgColor={getEntryColor(entry.title)}
+                iconBgColor={getEntryIconBg(entry, folders)}
                 isFavorite={entry.favorite}
                 lastUsed={formatLastUsed(entry.updatedAt)}
-                onCopy={() => handleCopy(entry.password)}
-                onClick={() => navigate(`/entry/${entry.id}`)}
+                copySuccess={copiedEntryId === entry.id}
+                onCopy={() => handleCopy(entry.id, entry.password)}
+                onClick={() => navigate(`/entry/${entry.id}/edit`)}
+                onFavoriteClick={() => handleFavoriteClick(entry.id)}
               />
             ))}
           </div>

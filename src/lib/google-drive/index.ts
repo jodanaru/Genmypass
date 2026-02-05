@@ -20,6 +20,7 @@ export {
   getExpiresAt,
   startAutoRefresh,
   stopAutoRefresh,
+  clearSessionTokens,
 } from "./token-manager.js";
 export {
   findVaultFile,

@@ -1,6 +1,5 @@
-import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
-import { MainLayout, VaultAppLayout } from "@/components/layout";
-import { ProtectedRoute } from "./ProtectedRoute";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import { VaultAppLayout } from "@/components/layout";
 import { Landing } from "@/pages";
 import {
   AuthCallbackPage,
@@ -21,14 +20,6 @@ import {
   ErrorPage,
 } from "@/pages";
 
-const ProtectedLayout = () => (
-  <ProtectedRoute>
-    <MainLayout>
-      <Outlet />
-    </MainLayout>
-  </ProtectedRoute>
-);
-
 export const router = createBrowserRouter([
   // Landing (página inicial pública)
   { path: "/", element: <Landing /> },
@@ -45,26 +36,19 @@ export const router = createBrowserRouter([
   { path: "/offline", element: <OfflinePage /> },
   { path: "/error", element: <ErrorPage /> },
 
-  // Rutas protegidas con bottom nav (sin MainLayout)
+  // Rutas protegidas: top bar + contenido + bottom nav (único layout)
   {
     element: <VaultAppLayout />,
     children: [
       { path: "vault", element: <VaultPage /> },
       { path: "generator", element: <GeneratorPage /> },
       { path: "settings", element: <SettingsPage /> },
-    ],
-  },
-
-  // Rutas protegidas con MainLayout (sidebar)
-  {
-    element: <ProtectedLayout />,
-    children: [
       { path: "entry/:id", element: <EntryDetailPage /> },
       { path: "entry/new", element: <EntryFormPage /> },
       { path: "entry/:id/edit", element: <EntryFormPage /> },
       { path: "search", element: <SearchPage /> },
       { path: "settings/password", element: <ChangePasswordPage /> },
-      { path: "folders", element: <FoldersPage /> },
+      { path: "settings/folders", element: <FoldersPage /> },
     ],
   },
 

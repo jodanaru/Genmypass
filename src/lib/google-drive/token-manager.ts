@@ -9,6 +9,8 @@ import { IV_LENGTH, GCM_TAG_LENGTH } from "@/lib/crypto/utils";
 import type { TokenResponse } from "./types.js";
 
 const STORAGE_KEY = "ert";
+const SESSION_ACCESS_TOKEN = "genmypass_access_token";
+const SESSION_EXPIRES_AT = "genmypass_token_expires_at";
 const REFRESH_BEFORE_MS = 5 * 60 * 1000; // 5 min antes de expirar
 const REFRESH_ENDPOINT = "/api/auth/refresh";
 
@@ -16,6 +18,22 @@ const REFRESH_ENDPOINT = "/api/auth/refresh";
 let currentAccessToken: string | null = null;
 let expiresAt: number | null = null;
 let refreshTimerId: ReturnType<typeof setTimeout> | null = null;
+
+function restoreFromSession(): boolean {
+  if (typeof sessionStorage === "undefined") return false;
+  const token = sessionStorage.getItem(SESSION_ACCESS_TOKEN);
+  const expiresStr = sessionStorage.getItem(SESSION_EXPIRES_AT);
+  if (!token || !expiresStr) return false;
+  const exp = parseInt(expiresStr, 10);
+  if (Number.isNaN(exp) || Date.now() >= exp) {
+    sessionStorage.removeItem(SESSION_ACCESS_TOKEN);
+    sessionStorage.removeItem(SESSION_EXPIRES_AT);
+    return false;
+  }
+  currentAccessToken = token;
+  expiresAt = exp;
+  return true;
+}
 
 /**
  * Cifra el refresh token con la master key (AES-256-GCM).
@@ -93,19 +111,25 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRes
 }
 
 /**
- * Actualiza el access token y la hora de expiración en memoria.
+ * Actualiza el access token y la hora de expiración en memoria y en sessionStorage.
  * Debe llamarse tras OAuth callback o tras un refresh exitoso.
  */
 export function setTokens(tokens: TokenResponse): void {
   currentAccessToken = tokens.access_token;
   expiresAt = Date.now() + tokens.expires_in * 1000;
+  if (typeof sessionStorage !== "undefined") {
+    sessionStorage.setItem(SESSION_ACCESS_TOKEN, tokens.access_token);
+    sessionStorage.setItem(SESSION_EXPIRES_AT, String(expiresAt));
+  }
 }
 
 /**
  * Devuelve el access token actual (o null si no hay ninguno).
+ * Restaura desde sessionStorage si la memoria está vacía (p. ej. tras recarga).
  */
 export function getAccessToken(): string | null {
-  return currentAccessToken;
+  if (currentAccessToken !== null) return currentAccessToken;
+  return restoreFromSession() ? currentAccessToken : null;
 }
 
 /**
@@ -148,5 +172,19 @@ export function stopAutoRefresh(): void {
   if (refreshTimerId !== null) {
     clearTimeout(refreshTimerId);
     refreshTimerId = null;
+  }
+}
+
+/**
+ * Limpia el access token en memoria, sessionStorage y cancela el auto-refresh.
+ * Obligatorio al cerrar sesión (Disconnect / Desvincular).
+ */
+export function clearSessionTokens(): void {
+  stopAutoRefresh();
+  currentAccessToken = null;
+  expiresAt = null;
+  if (typeof sessionStorage !== "undefined") {
+    sessionStorage.removeItem(SESSION_ACCESS_TOKEN);
+    sessionStorage.removeItem(SESSION_EXPIRES_AT);
   }
 }

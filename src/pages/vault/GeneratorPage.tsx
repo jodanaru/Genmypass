@@ -13,20 +13,30 @@ import {
 import {
   generatePassword,
   getPasswordStrength,
+  getStrengthBarColorClass,
+  getStrengthTextColorClass,
+  LENGTH_MAX,
+  LENGTH_MIN,
   type GeneratePasswordOptions,
   type PasswordStrength,
 } from "@/lib/password-generator";
 import { useClipboard } from "@/hooks/useClipboard";
 import { useSettingsStore } from "@/stores/settings-store";
 
-const LENGTH_MIN = 8;
-const LENGTH_MAX = 64;
 const RECENT_MAX = 10;
 
 interface RecentEntry {
   id: string;
   password: string;
   createdAt: Date;
+}
+
+function strengthColor(strength: PasswordStrength): string {
+  return getStrengthBarColorClass(strength);
+}
+
+function strengthTextColor(strength: PasswordStrength): string {
+  return getStrengthTextColorClass(strength);
 }
 
 function formatTimeAgo(date: Date): string {
@@ -38,34 +48,6 @@ function formatTimeAgo(date: Date): string {
   const h = Math.floor(min / 60);
   if (h === 1) return "1 hour ago";
   return `${h} hours ago`;
-}
-
-function strengthColor(strength: PasswordStrength): string {
-  switch (strength.level) {
-    case "excellent":
-      return "bg-green-500";
-    case "good":
-      return "bg-green-400";
-    case "fair":
-      return "bg-amber-500";
-    case "weak":
-    default:
-      return "bg-red-400";
-  }
-}
-
-function strengthTextColor(strength: PasswordStrength): string {
-  switch (strength.level) {
-    case "excellent":
-      return "text-green-600 dark:text-green-400";
-    case "good":
-      return "text-green-600 dark:text-green-400";
-    case "fair":
-      return "text-amber-600 dark:text-amber-400";
-    case "weak":
-    default:
-      return "text-red-600 dark:text-red-400";
-  }
 }
 
 export default function GeneratorPage() {
@@ -137,7 +119,9 @@ export default function GeneratorPage() {
   }, [options]);
 
   useEffect(() => {
-    doGenerate();
+    queueMicrotask(() => {
+      doGenerate();
+    });
   }, [doGenerate]);
 
   const handleRegenerate = () => {
