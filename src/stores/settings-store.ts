@@ -31,6 +31,7 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
 };
 
 interface SettingsState extends UserSettings {
+  lastSecurityAudit: string | null;
   // Actions
   setAutoLock: (minutes: AutoLockTime) => void;
   setClearClipboard: (enabled: boolean) => void;
@@ -42,12 +43,14 @@ interface SettingsState extends UserSettings {
   setExcludeAmbiguousCharacters: (exclude: boolean) => void;
   setAllowDuplicateCharacters: (allow: boolean) => void;
   setSettingsFromVault: (settings: UserSettings) => void;
+  setLastSecurityAudit: (date: string) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       ...DEFAULT_USER_SETTINGS,
+      lastSecurityAudit: null,
 
       setAutoLock: (minutes) => set({ autoLockMinutes: minutes }),
       setClearClipboard: (enabled) => set({ clearClipboard: enabled }),
@@ -62,6 +65,7 @@ export const useSettingsStore = create<SettingsState>()(
       setAllowDuplicateCharacters: (allow) =>
         set({ allowDuplicateCharacters: allow }),
       setSettingsFromVault: (settings) => set(settings),
+      setLastSecurityAudit: (date) => set({ lastSecurityAudit: date }),
     }),
     {
       name: "genmypass-settings",

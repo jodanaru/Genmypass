@@ -26,6 +26,8 @@ import {
   type GeneratePasswordOptions,
   type PasswordStrength,
 } from "@/lib/password-generator";
+import { checkPasswordBreach } from "@/lib/hibp";
+import { BreachWarning } from "@/components/vault";
 
 interface LocationState {
   generatedPassword?: string;
@@ -57,6 +59,10 @@ export default function EntryFormPage() {
   const [saveError, setSaveError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [breachResult, setBreachResult] = useState<{
+    breached: boolean;
+    count: number;
+  } | null>(null);
 
   const [genLength, setGenLength] = useState(() =>
     useSettingsStore.getState().defaultPasswordLength
@@ -126,6 +132,17 @@ export default function EntryFormPage() {
       navigate("/vault", { replace: true });
     }
   }, [isNew, id, entries, entry, navigate]);
+
+  useEffect(() => {
+    if (!password) {
+      setBreachResult(null);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      checkPasswordBreach(password).then(setBreachResult);
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [password]);
 
   const generateOptions: GeneratePasswordOptions = useMemo(
     () => ({
@@ -475,6 +492,9 @@ export default function EntryFormPage() {
                       </span>
                     </p>
                   </div>
+                )}
+                {breachResult?.breached && (
+                  <BreachWarning breachCount={breachResult.count} className="mt-2" />
                 )}
               </div>
 

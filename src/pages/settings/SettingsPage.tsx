@@ -8,6 +8,7 @@ import {
   Key,
   Database,
   Shield,
+  ShieldAlert,
   ExternalLink,
   ChevronRight,
   Upload,
@@ -19,6 +20,7 @@ import { useSettingsStore, type AutoLockTime } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useVaultStore } from "@/stores/vault-store";
 import { clearSessionTokens } from "@/lib/google-drive";
+import { formatRelative } from "@/lib/format-relative";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -37,6 +39,7 @@ export default function SettingsPage() {
     includeLowercase,
     excludeAmbiguousCharacters,
     allowDuplicateCharacters,
+    lastSecurityAudit,
     setAutoLock,
     setClearClipboard,
     setDefaultPasswordLength,
@@ -220,6 +223,39 @@ export default function SettingsPage() {
               </div>
             )}
           </div>
+        </section>
+
+        {/* SECURITY AUDIT SECTION */}
+        <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+          <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-wider px-6 pb-2 pt-6 uppercase">
+            Security Audit
+          </h3>
+
+          <button
+            type="button"
+            onClick={() => navigate("/settings/security-audit")}
+            className="w-full flex items-center gap-4 px-6 py-4 justify-between border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors text-left"
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-amber-500 flex items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-500/10 shrink-0 w-12 h-12">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-slate-900 dark:text-white font-medium">
+                  Check for Breached Passwords
+                </p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                  Scan your vault against known data breaches
+                </p>
+                {lastSecurityAudit && (
+                  <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">
+                    Last checked: {formatRelative(lastSecurityAudit)}
+                  </p>
+                )}
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400 shrink-0" />
+          </button>
         </section>
 
         {/* VAULT MANAGEMENT SECTION */}

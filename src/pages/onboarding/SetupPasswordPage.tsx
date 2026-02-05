@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Moon, Sun } from "lucide-react";
 import {
@@ -19,6 +19,8 @@ import {
 } from "@/lib/google-drive";
 import { DEFAULT_USER_SETTINGS } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { checkPasswordBreach } from "@/lib/hibp";
+import { BreachWarning } from "@/components/vault";
 
 interface PasswordState {
   password: string;
@@ -45,6 +47,21 @@ export default function SetupPasswordPage() {
       typeof document !== "undefined" &&
       document.documentElement.classList.contains("dark")
   );
+  const [breachResult, setBreachResult] = useState<{
+    breached: boolean;
+    count: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!state.password) {
+      setBreachResult(null);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      checkPasswordBreach(state.password).then(setBreachResult);
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [state.password]);
 
   const toggleDarkMode = () => {
     document.documentElement.classList.toggle("dark");
@@ -285,6 +302,9 @@ export default function SetupPasswordPage() {
               >
                 {strengthLabels[getStrength()]}
               </p>
+              {breachResult?.breached && (
+                <BreachWarning breachCount={breachResult.count} className="mt-3" />
+              )}
             </div>
 
             {/* Requirements checklist */}

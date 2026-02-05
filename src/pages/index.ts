@@ -18,6 +18,7 @@ export { default as SearchPage } from "./vault/SearchPage";
 export { default as SettingsPage } from "./settings/SettingsPage";
 export { default as ChangePasswordPage } from "./settings/ChangePasswordPage";
 export { default as FoldersPage } from "./settings/FoldersPage";
+export { default as SecurityAuditPage } from "./settings/SecurityAuditPage";
 
 // Special
 export { default as LockScreenPage } from "./special/LockScreenPage";
