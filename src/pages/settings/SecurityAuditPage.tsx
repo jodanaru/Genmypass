@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   ShieldAlert,
@@ -31,6 +32,7 @@ interface AuditProgress {
 const RATE_LIMIT_MS = 100;
 
 export default function SecurityAuditPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { entries } = useVault();
   const setLastSecurityAudit = useSettingsStore((s) => s.setLastSecurityAudit);
@@ -112,7 +114,7 @@ export default function SecurityAuditPage() {
             <div className="flex items-center gap-3">
               <ShieldAlert className="w-6 h-6 text-amber-500" />
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-                Security Audit
+                {t("settings.securityAudit")}
               </h1>
             </div>
           </div>
@@ -123,7 +125,7 @@ export default function SecurityAuditPage() {
         {status === "idle" && (
           <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
             <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-wider px-6 pb-2 pt-6 uppercase">
-              Check for breaches
+              {t("settings.audit.checkForBreaches")}
             </h3>
             <div className="px-6 py-6">
               <div className="flex items-start gap-4 mb-6">
@@ -132,14 +134,14 @@ export default function SecurityAuditPage() {
                 </div>
                 <div>
                   <p className="text-slate-900 dark:text-white font-medium">
-                    Check for Breached Passwords
+                    {t("settings.audit.checkBreachedTitle")}
                   </p>
                   <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                    Scan your vault against known data breaches using Have I Been Pwned. Passwords are checked with k-anonymity; only a hash prefix is sent.
+                    {t("settings.audit.checkBreachedDesc")}
                   </p>
                   {entriesWithPassword.length === 0 && (
                     <p className="text-amber-600 dark:text-amber-400 text-sm mt-2 font-medium">
-                      No passwords to scan. Add entries to your vault first.
+                      {t("settings.audit.noPasswordsToScan")}
                     </p>
                   )}
                 </div>
@@ -151,7 +153,7 @@ export default function SecurityAuditPage() {
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-primary-500 text-white font-bold hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ShieldCheck className="w-5 h-5" />
-                Start scan
+                {t("settings.audit.startScan")}
               </button>
             </div>
           </section>
@@ -161,7 +163,10 @@ export default function SecurityAuditPage() {
           <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
             <div className="px-6 py-6 space-y-4">
               <p className="text-slate-900 dark:text-white font-medium">
-                Checking {progress.current} of {progress.total} passwords…
+                {t("settings.audit.checkingProgress", {
+                  current: progress.current,
+                  total: progress.total,
+                })}
               </p>
               <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                 <div
@@ -177,7 +182,7 @@ export default function SecurityAuditPage() {
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-bold hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
               >
                 <X className="w-5 h-5" />
-                Cancel scan
+                {t("settings.audit.cancelScan")}
               </button>
             </div>
           </section>
@@ -187,15 +192,19 @@ export default function SecurityAuditPage() {
           <>
             <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
               <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-wider px-6 pb-2 pt-6 uppercase">
-                Results
+                {t("settings.audit.results")}
               </h3>
               <div className="px-6 py-6 space-y-4">
                 <p className="text-slate-900 dark:text-white">
-                  {compromised.length} of {total} password{total !== 1 ? "s are" : " is"} compromised
+                  {t("settings.audit.compromisedOfTotal", {
+                    count: total,
+                    compromised: compromised.length,
+                    total,
+                  })}
                 </p>
                 <div className="flex items-center gap-3">
                   <span className={`text-2xl font-bold ${scoreColorClass}`}>
-                    Security Score: {safePercent}%
+                    {t("settings.audit.securityScore", { percent: safePercent })}
                   </span>
                 </div>
                 <div className="h-3 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -208,12 +217,14 @@ export default function SecurityAuditPage() {
                   {compromised.length > 0 && (
                     <p className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
                       <AlertTriangle className="w-4 h-4 shrink-0" />
-                      {compromised.length} password{compromised.length !== 1 ? "s need" : " needs"} attention
+                      {t("settings.audit.needsAttention", {
+                        count: compromised.length,
+                      })}
                     </p>
                   )}
                   <p className="flex items-center gap-2 text-green-600 dark:text-green-400">
                     <CheckCircle className="w-4 h-4 shrink-0" />
-                    {secure.length} password{secure.length !== 1 ? "s are" : " is"} secure
+                    {t("settings.audit.secureCount", { count: secure.length })}
                   </p>
                 </div>
                 <button
@@ -221,7 +232,7 @@ export default function SecurityAuditPage() {
                   onClick={handleScanAgain}
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 >
-                  Scan again
+                  {t("settings.audit.scanAgain")}
                 </button>
               </div>
             </section>
@@ -229,7 +240,9 @@ export default function SecurityAuditPage() {
             {compromised.length > 0 && (
               <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
                 <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-wider px-6 pb-2 pt-6 uppercase">
-                  Compromised ({compromised.length})
+                  {t("settings.audit.compromisedCount", {
+                    count: compromised.length,
+                  })}
                 </h3>
                 <div className="divide-y divide-slate-100 dark:divide-slate-700">
                   {compromised.map((r) => {
@@ -260,7 +273,7 @@ export default function SecurityAuditPage() {
                   className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors text-left"
                 >
                   <span className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-wider uppercase">
-                    Secure ({secure.length})
+                    {t("settings.audit.secureSection", { count: secure.length })}
                   </span>
                   {secureSectionCollapsed ? (
                     <ChevronRight className="w-5 h-5 text-slate-400" />
@@ -280,7 +293,7 @@ export default function SecurityAuditPage() {
                         >
                           <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
                           <span className="font-medium text-slate-900 dark:text-white truncate">
-                            {entry.title || "Untitled"}
+                            {entry.title || t("settings.audit.untitled")}
                           </span>
                         </div>
                       );

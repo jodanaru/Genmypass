@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   Download,
@@ -31,6 +32,7 @@ function downloadBlob(blob: Blob, filename: string) {
 }
 
 export default function ExportPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const masterKey = useAuthStore((s) => s.masterKey);
   const { vault, isLoading: vaultLoading } = useVault();
@@ -70,7 +72,7 @@ export default function ExportPage() {
         fromBase64(salt)
       );
       if (!timingSafeEqual(derivedKey, masterKey)) {
-        setEncryptedError("Incorrect master password.");
+        setEncryptedError(t("settings.exportPage.incorrectPassword"));
         return;
       }
       const blob = await exportVaultEncrypted(vault, encryptedPassword);
@@ -80,7 +82,7 @@ export default function ExportPage() {
       setShowEncryptedModal(false);
     } catch (err) {
       console.error("Export encrypted error:", err);
-      setEncryptedError("Export failed. Please try again.");
+      setEncryptedError(t("settings.exportPage.exportFailed"));
     } finally {
       setIsEncrypting(false);
     }
@@ -103,7 +105,7 @@ export default function ExportPage() {
       await initSodium();
       const { key: derivedKey } = deriveKey(csvPassword, fromBase64(salt));
       if (!timingSafeEqual(derivedKey, masterKey)) {
-        setCsvError("Incorrect master password.");
+        setCsvError(t("settings.exportPage.incorrectPassword"));
         return;
       }
       const blob = exportVaultCSV(vault);
@@ -111,12 +113,10 @@ export default function ExportPage() {
       downloadBlob(blob, `genmypass-export-${date}.csv`);
       setCsvPassword("");
       setShowCsvPasswordModal(false);
-      alert(
-        "Delete this file after importing to your new password manager."
-      );
+      alert(t("settings.exportPage.deleteAfterImport"));
     } catch (err) {
       console.error("Export CSV error:", err);
-      setCsvError("Export failed. Please try again.");
+      setCsvError(t("settings.exportPage.exportFailed"));
     } finally {
       setIsCsvExporting(false);
     }
@@ -135,7 +135,7 @@ export default function ExportPage() {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-              Export
+              {t("settings.exportPage.title")}
             </h1>
           </div>
         </div>
@@ -145,12 +145,12 @@ export default function ExportPage() {
         {vaultLoading && (
           <p className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
-            Loading vault...
+            {t("settings.exportPage.loadingVault")}
           </p>
         )}
         {!vaultLoading && !canExport && (
           <p className="text-slate-500 dark:text-slate-400 text-sm">
-            Connect your vault and unlock to export.
+            {t("settings.exportPage.connectFirst")}
           </p>
         )}
 
@@ -164,15 +164,14 @@ export default function ExportPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                    Encrypted Backup
+                    {t("settings.exportPage.encryptedBackup")}
                   </h2>
                   <span className="text-xs font-semibold px-2 py-0.5 bg-green-500/20 text-green-600 dark:text-green-400 rounded-full">
-                    Recommended
+                    {t("settings.exportPage.recommended")}
                   </span>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                  Download a .genmypass file encrypted with your master password.
-                  Only you can open it.
+                  {t("settings.exportPage.encryptedDesc")}
                 </p>
                 <button
                   type="button"
@@ -185,7 +184,7 @@ export default function ExportPage() {
                   className="mt-4 px-4 py-2 rounded-lg bg-primary-500 text-white text-sm font-bold hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   <Download className="w-4 h-4" />
-                  Export Encrypted Backup
+                  {t("settings.exportPage.exportEncrypted")}
                 </button>
               </div>
             </div>
@@ -202,15 +201,14 @@ export default function ExportPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                    CSV for Migration
+                    {t("settings.exportPage.csvMigration")}
                   </h2>
                   <span className="text-xs font-semibold px-2 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full">
-                    Migration only
+                    {t("settings.exportPage.migrationOnly")}
                   </span>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                  Export passwords as plain text CSV. Only for moving to another
-                  password manager. Delete the file after import.
+                  {t("settings.exportPage.csvDesc")}
                 </p>
                 <button
                   type="button"
@@ -218,7 +216,7 @@ export default function ExportPage() {
                   disabled={!canExport}
                   className="mt-4 px-4 py-2 rounded-lg border border-amber-500/50 text-amber-600 dark:text-amber-400 text-sm font-bold hover:bg-amber-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Export CSV
+                  {t("settings.exportPage.exportCsv")}
                 </button>
               </div>
             </div>
@@ -231,17 +229,17 @@ export default function ExportPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-700">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-              Enter master password
+              {t("settings.exportPage.enterPassword")}
             </h3>
             <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-              Confirm your master password to create the encrypted backup.
+              {t("settings.exportPage.confirmEncrypted")}
             </p>
             <div className="relative mb-4">
               <input
                 type={showEncryptedPassword ? "text" : "password"}
                 value={encryptedPassword}
                 onChange={(e) => setEncryptedPassword(e.target.value)}
-                placeholder="Master password"
+                placeholder={t("settings.exportPage.placeholderPassword")}
                 className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-10"
                 autoComplete="current-password"
               />
@@ -270,7 +268,7 @@ export default function ExportPage() {
                 }}
                 className="flex-1 px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -281,10 +279,10 @@ export default function ExportPage() {
                 {isEncrypting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Exporting...
+                    {t("settings.exportPage.exporting")}
                   </>
                 ) : (
-                  "Export"
+                  t("settings.export")
                 )}
               </button>
             </div>
@@ -297,17 +295,17 @@ export default function ExportPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-700">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-              Enter master password
+              {t("settings.exportPage.enterPassword")}
             </h3>
             <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-              Verify your identity to export the CSV file.
+              {t("settings.exportPage.verifyCsv")}
             </p>
             <div className="relative mb-4">
               <input
                 type={showCsvPassword ? "text" : "password"}
                 value={csvPassword}
                 onChange={(e) => setCsvPassword(e.target.value)}
-                placeholder="Master password"
+                placeholder={t("settings.exportPage.placeholderPassword")}
                 className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-10"
                 autoComplete="current-password"
               />
@@ -336,7 +334,7 @@ export default function ExportPage() {
                 }}
                 className="flex-1 px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -347,10 +345,10 @@ export default function ExportPage() {
                 {isCsvExporting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Exporting...
+                    {t("settings.exportPage.exporting")}
                   </>
                 ) : (
-                  "Export CSV"
+                  t("settings.exportPage.exportCsv")
                 )}
               </button>
             </div>

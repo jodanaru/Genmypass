@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   Upload,
@@ -22,17 +23,18 @@ import {
 import { useVaultStore, type Vault } from "@/stores/vault-store";
 import { useSettingsStore } from "@/stores/settings-store";
 
-const FORMAT_LABELS: Record<string, string> = {
-  genmypass: "Genmypass backup (.genmypass)",
-  bitwarden: "Bitwarden (JSON)",
-  "csv-lastpass": "LastPass (CSV)",
-  "csv-1password": "1Password (CSV)",
-  csv: "CSV (Genmypass or generic)",
+const FORMAT_KEYS: Record<string, string> = {
+  genmypass: "formatGenmypass",
+  bitwarden: "formatBitwarden",
+  "csv-lastpass": "formatLastPass",
+  "csv-1password": "format1Password",
+  csv: "formatCsv",
 };
 
 type ImportMode = "merge" | "replace";
 
 export default function ImportPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const fileId = useVaultStore((s) => s.fileId);
   const vaultFileSalt = useVaultStore((s) => s.vaultFileSalt);
@@ -65,7 +67,7 @@ export default function ImportPage() {
       if (!selectedFile) return;
 
       if (selectedFile.size > MAX_IMPORT_FILE_SIZE) {
-        setImportError("File exceeds 10 MB limit.");
+        setImportError(t("settings.importPage.fileTooBig"));
         return;
       }
 
@@ -97,13 +99,13 @@ export default function ImportPage() {
         setPreview(result);
       } catch (err) {
         setImportError(
-          err instanceof Error ? err.message : "Could not read file."
+          err instanceof Error ? err.message : t("settings.importPage.couldNotRead")
         );
       } finally {
         setIsLoading(false);
       }
     },
-    []
+    [t]
   );
 
   const handleGenmypassPasswordSubmit = useCallback(async () => {
@@ -116,22 +118,22 @@ export default function ImportPage() {
       setShowPasswordModal(false);
       setGenmypassPassword("");
       if (!result.success && result.errors.length > 0) {
-        setImportError(result.errors[0] ?? "Import failed.");
+        setImportError(result.errors[0] ?? t("settings.importPage.importFailed"));
       }
     } catch (err) {
       setImportError(
-        err instanceof Error ? err.message : "Import failed."
+        err instanceof Error ? err.message : t("settings.importPage.importFailed")
       );
     } finally {
       setIsLoading(false);
     }
-  }, [file, genmypassPassword]);
+  }, [file, genmypassPassword, t]);
 
   const handleImport = useCallback(async () => {
     if (!preview || !preview.success) return;
 
     const { entries, folders, settings } = preview;
-    setImportProgress("Importing...");
+    setImportProgress(t("settings.importPage.importing"));
     setIsImporting(true);
     setImportDone(null);
 
@@ -164,13 +166,13 @@ export default function ImportPage() {
         for (const folder of folders) {
           addFolder(folder);
           done++;
-          setImportProgress(`Importing ${done} of ${total}...`);
+          setImportProgress(t("settings.importPage.importProgress", { done, total }));
         }
         for (const entry of entries) {
           addEntry(entry);
           done++;
           if (done % 10 === 0 || done === total) {
-            setImportProgress(`Importing ${done} of ${total}...`);
+            setImportProgress(t("settings.importPage.importProgress", { done, total }));
           }
         }
       }
@@ -182,7 +184,7 @@ export default function ImportPage() {
       setImportProgress(null);
       setIsImporting(false);
     }
-  }, [preview, mode, setVault, addFolder, addEntry, setSettingsFromVault]);
+  }, [preview, mode, setVault, addFolder, addEntry, setSettingsFromVault, t]);
 
   const handleUndo = useCallback(() => {
     if (!backupForUndo || !fileId) return;
@@ -217,7 +219,7 @@ export default function ImportPage() {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-              Import
+              {t("settings.importPage.title")}
             </h1>
           </div>
         </div>
@@ -232,10 +234,10 @@ export default function ImportPage() {
         >
           <Upload className="w-12 h-12 mx-auto text-slate-400 mb-3" />
           <p className="text-slate-600 dark:text-slate-300 text-sm mb-2">
-            Drop a file here or click to choose
+            {t("settings.importPage.dropHere")}
           </p>
           <p className="text-slate-400 dark:text-slate-500 text-xs mb-4">
-            .genmypass, .json, .csv — max 10 MB
+            {t("settings.importPage.formats")}
           </p>
           <input
             type="file"
@@ -248,14 +250,14 @@ export default function ImportPage() {
             htmlFor="import-file-input"
             className="inline-block px-4 py-2 rounded-lg bg-primary-500 text-white text-sm font-bold hover:bg-primary-600 cursor-pointer"
           >
-            Choose file
+            {t("settings.importPage.chooseFile")}
           </label>
         </section>
 
         {isLoading && (
           <div className="flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400">
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Detecting format...</span>
+            <span>{t("settings.importPage.detectingFormat")}</span>
           </div>
         )}
 
@@ -270,22 +272,24 @@ export default function ImportPage() {
           <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
             <div className="p-6">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-                Preview
+                {t("settings.importPage.preview")}
               </h2>
               {format && (
                 <p className="text-slate-500 dark:text-slate-400 text-sm mb-2 flex items-center gap-2">
                   <FileJson className="w-4 h-4" />
-                  {FORMAT_LABELS[format] ?? format}
+                  {FORMAT_KEYS[format] ? t(`settings.importPage.${FORMAT_KEYS[format]}`) : format}
                 </p>
               )}
               <p className="text-slate-600 dark:text-slate-300 text-sm mb-4">
-                {preview.entries.length} entries, {preview.folders.length}{" "}
-                folders
+                {t("settings.importPage.entriesAndFolders", {
+                  entries: preview.entries.length,
+                  folders: preview.folders.length,
+                })}
               </p>
               {preview.entries.length > 0 && (
                 <ul className="text-sm text-slate-600 dark:text-slate-300 mb-4 list-disc list-inside">
                   {preview.entries.slice(0, 10).map((e) => (
-                    <li key={e.id}>{e.title || "Untitled"}</li>
+                    <li key={e.id}>{e.title || t("settings.audit.untitled")}</li>
                   ))}
                   {preview.entries.length > 10 && (
                     <li className="text-slate-400">
@@ -297,7 +301,7 @@ export default function ImportPage() {
 
               <div className="space-y-2 mb-4">
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Import mode
+                  {t("settings.importPage.importMode")}
                 </p>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -308,7 +312,7 @@ export default function ImportPage() {
                     className="text-primary-500 focus:ring-primary-500"
                   />
                   <span className="text-slate-700 dark:text-slate-300">
-                    Merge with existing
+                    {t("settings.importPage.merge")}
                   </span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -320,7 +324,7 @@ export default function ImportPage() {
                     className="text-primary-500 focus:ring-primary-500"
                   />
                   <span className="text-slate-700 dark:text-slate-300">
-                    Replace all
+                    {t("settings.importPage.replace")}
                   </span>
                 </label>
               </div>
@@ -334,10 +338,10 @@ export default function ImportPage() {
                 {isImporting ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    {importProgress ?? "Importing..."}
+                    {importProgress ?? t("settings.importPage.importing")}
                   </>
                 ) : (
-                  "Import"
+                  t("settings.importPage.import")
                 )}
               </button>
             </div>
@@ -349,11 +353,13 @@ export default function ImportPage() {
             <div className="p-6">
               <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-2">
                 <CheckCircle className="w-5 h-5" />
-                <h2 className="text-lg font-bold">Import complete</h2>
+                <h2 className="text-lg font-bold">{t("settings.importPage.importComplete")}</h2>
               </div>
               <p className="text-slate-600 dark:text-slate-300 text-sm mb-2">
-                {importDone.entries.length} entries and {importDone.folders.length}{" "}
-                folders imported.
+                {t("settings.importPage.importedCount", {
+                  entries: importDone.entries.length,
+                  folders: importDone.folders.length,
+                })}
               </p>
               {importDone.errors.length > 0 && (
                 <ul className="text-red-500 text-sm list-disc list-inside mb-2">
@@ -376,7 +382,7 @@ export default function ImportPage() {
                   className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700"
                 >
                   <Undo2 className="w-4 h-4" />
-                  Undo (restore previous vault)
+                  {t("settings.importPage.undoRestore")}
                 </button>
               )}
             </div>
@@ -389,16 +395,16 @@ export default function ImportPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-700">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-              Genmypass backup
+              {t("settings.importPage.genmypassBackup")}
             </h3>
             <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-              Enter the master password used to create this backup.
+              {t("settings.importPage.genmypassPasswordDesc")}
             </p>
             <input
               type="password"
               value={genmypassPassword}
               onChange={(e) => setGenmypassPassword(e.target.value)}
-              placeholder="Master password"
+              placeholder={t("settings.exportPage.placeholderPassword")}
               className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 mb-4"
               autoComplete="current-password"
             />
@@ -413,7 +419,7 @@ export default function ImportPage() {
                 }}
                 className="flex-1 px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -424,7 +430,7 @@ export default function ImportPage() {
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  "Continue"
+                  t("settings.importPage.continue")
                 )}
               </button>
             </div>

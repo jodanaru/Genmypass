@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   Folder,
@@ -16,6 +17,7 @@ import {
 } from "@/lib/category-colors";
 
 export default function FoldersPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { folders, entries, save } = useVault();
   const addFolder = useVaultStore((s) => s.addFolder);
@@ -63,11 +65,11 @@ export default function FoldersPage() {
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) {
-      setNameError("Name is required.");
+      setNameError(t("settings.folders.nameRequired"));
       return;
     }
     if (folders.some((f) => f.name.trim().toLowerCase() === trimmed.toLowerCase() && f.id !== editingFolder?.id)) {
-      setNameError("A category with that name already exists.");
+      setNameError(t("settings.folders.nameExists"));
       return;
     }
     setIsSaving(true);
@@ -85,7 +87,7 @@ export default function FoldersPage() {
       closeModal();
     } catch (err) {
       console.error("Error saving category:", err);
-      setNameError("Error saving. Check your connection.");
+      setNameError(t("settings.folders.saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -95,8 +97,8 @@ export default function FoldersPage() {
     const count = entries.filter((e) => e.folderId === folderId).length;
     const msg =
       count > 0
-        ? `Delete this category? ${count} password(s) will be moved to "Uncategorized".`
-        : "Delete this category?";
+        ? t("settings.folders.deleteWithPasswords", { count })
+        : t("settings.folders.deleteConfirm");
     if (!window.confirm(msg)) return;
     try {
       deleteFolder(folderId);
@@ -125,7 +127,7 @@ export default function FoldersPage() {
             <div className="flex items-center gap-3">
               <Folder className="w-6 h-6 text-primary-500" />
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-                Categories
+                {t("settings.folders.title")}
               </h1>
             </div>
           </div>
@@ -137,7 +139,7 @@ export default function FoldersPage() {
         <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700">
             <h2 className="text-slate-900 dark:text-white font-semibold">
-              Your categories
+              {t("settings.folders.yourCategories")}
             </h2>
             <button
               type="button"
@@ -145,7 +147,7 @@ export default function FoldersPage() {
               className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white text-sm font-bold rounded-lg hover:bg-primary-600 transition-colors"
             >
               <Plus className="w-4 h-4" />
-              Add category
+              {t("settings.folders.addCategory")}
             </button>
           </div>
 
@@ -155,7 +157,7 @@ export default function FoldersPage() {
                 <Folder className="w-8 h-8 text-slate-400" />
               </div>
               <p className="text-slate-500 dark:text-slate-400 mb-4">
-                You don&apos;t have any categories yet. Create them to organize your passwords.
+                {t("settings.folders.noCategories")}
               </p>
               <button
                 type="button"
@@ -163,7 +165,7 @@ export default function FoldersPage() {
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white text-sm font-bold rounded-lg hover:bg-primary-600 transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                Create first category
+                {t("settings.folders.createFirst")}
               </button>
             </div>
           ) : (
@@ -186,7 +188,9 @@ export default function FoldersPage() {
                         {folder.name}
                       </p>
                       <p className="text-slate-500 dark:text-slate-400 text-sm">
-                        {getEntryCount(folder.id)} password(s)
+                        {t("settings.folders.passwordsCount", {
+                          count: getEntryCount(folder.id),
+                        })}
                       </p>
                     </div>
                   </div>
@@ -195,7 +199,7 @@ export default function FoldersPage() {
                       type="button"
                       onClick={() => openEditModal(folder)}
                       className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-primary-500 transition-colors"
-                      aria-label="Edit category"
+                      aria-label={t("settings.folders.ariaEdit")}
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
@@ -203,7 +207,7 @@ export default function FoldersPage() {
                       type="button"
                       onClick={() => handleDelete(folder.id)}
                       className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors"
-                      aria-label="Delete category"
+                      aria-label={t("settings.folders.ariaDelete")}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -220,7 +224,7 @@ export default function FoldersPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-              {editingFolder ? "Edit category" : "New category"}
+              {editingFolder ? t("settings.folders.editCategory") : t("settings.folders.newCategory")}
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -228,7 +232,7 @@ export default function FoldersPage() {
                   htmlFor="folder-name"
                   className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
                 >
-                  Name
+                  {t("settings.folders.name")}
                 </label>
                 <input
                   id="folder-name"
@@ -238,7 +242,7 @@ export default function FoldersPage() {
                     setName(e.target.value);
                     if (nameError) setNameError("");
                   }}
-                  placeholder="e.g. Social, Work..."
+                  placeholder={t("settings.folders.namePlaceholder")}
                   className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   autoFocus
                 />
@@ -248,7 +252,7 @@ export default function FoldersPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Color
+                  {t("settings.folders.color")}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {CATEGORY_COLORS.map((c) => (
@@ -272,14 +276,14 @@ export default function FoldersPage() {
                   onClick={closeModal}
                   className="flex-1 px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
                   className="flex-1 px-4 py-3 rounded-lg bg-primary-500 text-white font-semibold hover:bg-primary-600 disabled:opacity-50 transition-colors"
                 >
-                  {isSaving ? "Saving…" : editingFolder ? "Save" : "Create"}
+                  {isSaving ? t("settings.folders.saving") : editingFolder ? t("common.save") : t("settings.folders.create")}
                 </button>
               </div>
             </form>

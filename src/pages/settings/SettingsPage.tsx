@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   Lock,
@@ -22,14 +23,30 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useVaultStore } from "@/stores/vault-store";
 import { clearSessionTokens, deleteVaultFile } from "@/lib/google-drive";
 import { clearAllGenmypassStorage } from "@/lib/clear-vault-data";
-import { formatRelative } from "@/lib/format-relative";
+import { useFormatRelative } from "@/lib/format-relative";
 
 export default function SettingsPage() {
+  const { t, i18n } = useTranslation();
+  const formatRelative = useFormatRelative();
   const navigate = useNavigate();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark">(() =>
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+      ? "dark"
+      : "light"
+  );
+
+  useEffect(() => {
+    const el = document.documentElement;
+    const observer = new MutationObserver(() => {
+      setTheme(el.classList.contains("dark") ? "dark" : "light");
+    });
+    observer.observe(el, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   const lock = useAuthStore((s) => s.lock);
 
@@ -64,11 +81,7 @@ export default function SettingsPage() {
     !!localStorage.getItem("genmypass_vault_file_id");
 
   const handleDisconnect = () => {
-    if (
-      confirm(
-        "Are you sure you want to disconnect Google Drive? You will need to connect again to access your vault."
-      )
-    ) {
+    if (confirm(t("settings.disconnectConfirm"))) {
       clearSessionTokens();
       if (typeof localStorage !== "undefined") {
         localStorage.removeItem("genmypass_vault_file_id");
@@ -105,9 +118,7 @@ export default function SettingsPage() {
       navigate("/");
     } catch (err) {
       console.error("Error deleting vault:", err);
-      setDeleteError(
-        "Could not delete from Google Drive. Delete local data only?"
-      );
+      setDeleteError(t("settings.deleteError"));
     } finally {
       setIsDeleting(false);
     }
@@ -140,12 +151,12 @@ export default function SettingsPage() {
             <div className="flex items-center gap-3">
               <Shield className="w-6 h-6 text-primary-500" />
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-                Settings
+                {t("settings.title")}
               </h1>
             </div>
           </div>
           <span className="text-xs font-medium px-2 py-1 bg-primary-500/10 text-primary-500 rounded-full">
-            v1.0.0
+            {t("settings.version")}
           </span>
         </div>
       </header>
@@ -155,7 +166,7 @@ export default function SettingsPage() {
         {/* SECURITY SECTION */}
         <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
           <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-wider px-6 pb-2 pt-6 uppercase">
-            Security
+            {t("settings.security")}
           </h3>
 
           {/* Auto-lock */}
@@ -166,10 +177,10 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="text-slate-900 dark:text-white font-medium">
-                  Auto-lock
+                  {t("settings.autoLock")}
                 </p>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">
-                  Automatically lock the vault after inactivity
+                  {t("settings.autoLockDesc")}
                 </p>
               </div>
             </div>
@@ -178,10 +189,10 @@ export default function SettingsPage() {
               onChange={(e) => setAutoLock(e.target.value as AutoLockTime)}
               className="bg-transparent border-none text-slate-900 dark:text-white text-sm font-semibold focus:ring-0 cursor-pointer text-right"
             >
-              <option value="1">1 minute</option>
-              <option value="5">5 minutes</option>
-              <option value="15">15 minutes</option>
-              <option value="never">Never</option>
+              <option value="1">{t("settings.minute_one", { count: 1 })}</option>
+              <option value="5">{t("settings.minute_other", { count: 5 })}</option>
+              <option value="15">{t("settings.minute_other", { count: 15 })}</option>
+              <option value="never">{t("settings.never")}</option>
             </select>
           </div>
 
@@ -193,10 +204,10 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="text-slate-900 dark:text-white font-medium">
-                  Clear Clipboard
+                  {t("settings.clearClipboard")}
                 </p>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">
-                  Erase copied passwords after 30 seconds
+                  {t("settings.clearClipboardDesc")}
                 </p>
               </div>
             </div>
@@ -215,7 +226,7 @@ export default function SettingsPage() {
         {/* CLOUD STORAGE SECTION */}
         <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
           <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-wider px-6 pb-2 pt-6 uppercase">
-            Cloud Storage
+            {t("settings.cloudStorage")}
           </h3>
 
           <div className="flex items-center gap-4 px-6 py-4 justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
@@ -226,13 +237,13 @@ export default function SettingsPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <p className="text-slate-900 dark:text-white font-medium">
-                    Google Drive
+                    {t("settings.googleDrive")}
                   </p>
                   {isConnected && (
                     <>
                       <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
                       <span className="text-[10px] text-green-600 dark:text-green-400 font-bold uppercase">
-                        Connected
+                        {t("settings.connected")}
                       </span>
                     </>
                   )}
@@ -249,7 +260,7 @@ export default function SettingsPage() {
                   onClick={handleDisconnect}
                   className="px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                 >
-                  Disconnect
+                  {t("settings.disconnect")}
                 </button>
               </div>
             )}
@@ -259,7 +270,7 @@ export default function SettingsPage() {
         {/* SECURITY AUDIT SECTION */}
         <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
           <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-wider px-6 pb-2 pt-6 uppercase">
-            Security Audit
+            {t("settings.securityAudit")}
           </h3>
 
           <button
@@ -273,14 +284,14 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="text-slate-900 dark:text-white font-medium">
-                  Check for Breached Passwords
+                  {t("settings.checkBreached")}
                 </p>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">
-                  Scan your vault against known data breaches
+                  {t("settings.scanBreaches")}
                 </p>
                 {lastSecurityAudit && (
                   <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">
-                    Last checked: {formatRelative(lastSecurityAudit)}
+                    {t("settings.lastChecked", { time: formatRelative(lastSecurityAudit) })}
                   </p>
                 )}
               </div>
@@ -292,7 +303,7 @@ export default function SettingsPage() {
         {/* VAULT MANAGEMENT SECTION */}
         <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
           <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-wider px-6 pb-2 pt-6 uppercase">
-            Vault Management
+            {t("settings.vaultManagement")}
           </h3>
 
           {/* Change Master Password */}
@@ -307,10 +318,10 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="text-slate-900 dark:text-white font-medium">
-                  Change Master Password
+                  {t("settings.changeMasterPassword")}
                 </p>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">
-                  Update your vault&apos;s encryption key
+                  {t("settings.changeMasterPasswordDesc")}
                 </p>
               </div>
             </div>
@@ -329,10 +340,10 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="text-slate-900 dark:text-white font-medium">
-                  Categories
+                  {t("settings.categories")}
                 </p>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">
-                  Create and manage categories to organize passwords
+                  {t("settings.categoriesDesc")}
                 </p>
               </div>
             </div>
@@ -347,10 +358,10 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="text-slate-900 dark:text-white font-medium">
-                  Data Portability
+                  {t("settings.dataPortability")}
                 </p>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">
-                  Export or import your vault items
+                  {t("settings.dataPortabilityDesc")}
                 </p>
               </div>
             </div>
@@ -361,7 +372,7 @@ export default function SettingsPage() {
                 className="px-4 py-2 rounded-lg bg-primary-500 text-white text-sm font-bold hover:bg-primary-600 transition-colors flex items-center gap-2"
               >
                 <Upload className="w-4 h-4" />
-                Import
+                {t("settings.import")}
               </button>
               <button
                 type="button"
@@ -369,7 +380,7 @@ export default function SettingsPage() {
                 className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
-                Export
+                {t("settings.export")}
               </button>
             </div>
           </div>
@@ -378,17 +389,17 @@ export default function SettingsPage() {
         {/* GENERATOR DEFAULTS SECTION */}
         <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
           <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-wider px-6 pb-2 pt-6 uppercase">
-            Generator Defaults
+            {t("settings.generatorDefaults")}
           </h3>
 
           <div className="px-6 py-6 space-y-6">
             <div>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-sm font-semibold text-slate-900 dark:text-white">
-                  Default Password Length
+                  {t("settings.defaultPasswordLength")}
                 </label>
                 <span className="text-primary-500 font-bold">
-                  {defaultPasswordLength} characters
+                  {defaultPasswordLength} {t("settings.characters")}
                 </span>
               </div>
               <input
@@ -406,7 +417,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-2 gap-4">
               <label className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-transparent hover:border-primary-500/30 transition-all cursor-pointer">
                 <span className="text-sm font-medium text-slate-900 dark:text-white">
-                  Uppercase ABC…
+                  {t("entry.uppercase")}
                 </span>
                 <input
                   type="checkbox"
@@ -417,7 +428,7 @@ export default function SettingsPage() {
               </label>
               <label className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-transparent hover:border-primary-500/30 transition-all cursor-pointer">
                 <span className="text-sm font-medium text-slate-900 dark:text-white">
-                  Lowercase abc…
+                  {t("entry.lowercase")}
                 </span>
                 <input
                   type="checkbox"
@@ -428,7 +439,7 @@ export default function SettingsPage() {
               </label>
               <label className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-transparent hover:border-primary-500/30 transition-all cursor-pointer">
                 <span className="text-sm font-medium text-slate-900 dark:text-white">
-                  Numbers 123…
+                  {t("entry.numbers")}
                 </span>
                 <input
                   type="checkbox"
@@ -439,7 +450,7 @@ export default function SettingsPage() {
               </label>
               <label className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-transparent hover:border-primary-500/30 transition-all cursor-pointer">
                 <span className="text-sm font-medium text-slate-900 dark:text-white">
-                  Symbols !@#…
+                  {t("entry.symbols")}
                 </span>
                 <input
                   type="checkbox"
@@ -453,7 +464,7 @@ export default function SettingsPage() {
             <label className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-transparent hover:border-primary-500/30 transition-all cursor-pointer block">
               <div>
                 <span className="text-sm font-medium text-slate-900 dark:text-white block">
-                  Exclude ambiguous
+                  {t("entry.excludeAmbiguous")}
                 </span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   E.g. i, I, 1, L, o, 0, O
@@ -471,7 +482,7 @@ export default function SettingsPage() {
 
             <label className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-transparent hover:border-primary-500/30 transition-all cursor-pointer">
               <span className="text-sm font-medium text-slate-900 dark:text-white">
-                Allow duplicates
+                {t("entry.allowDuplicate")}
               </span>
               <input
                 type="checkbox"
@@ -488,10 +499,56 @@ export default function SettingsPage() {
         {/* ABOUT SECTION */}
         <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
           <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-wider px-6 pb-2 pt-6 uppercase">
-            About
+            {t("settings.about")}
           </h3>
 
           <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-700">
+            <div className="px-6 py-4 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+              <div>
+                <p className="text-slate-900 dark:text-white font-medium">
+                  {t("settings.theme")}
+                </p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                  {t("settings.themeDesc")}
+                </p>
+              </div>
+              <select
+                value={theme}
+                onChange={(e) => {
+                  const v = e.target.value as "light" | "dark";
+                  setTheme(v);
+                  if (v === "dark") {
+                    document.documentElement.classList.add("dark");
+                    localStorage.setItem("genmypass_theme", "dark");
+                  } else {
+                    document.documentElement.classList.remove("dark");
+                    localStorage.setItem("genmypass_theme", "light");
+                  }
+                }}
+                className="bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="light">{t("settings.themeLight")}</option>
+                <option value="dark">{t("settings.themeDark")}</option>
+              </select>
+            </div>
+            <div className="px-6 py-4 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+              <div>
+                <p className="text-slate-900 dark:text-white font-medium">
+                  {t("settings.language")}
+                </p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                  {t("settings.languageDesc")}
+                </p>
+              </div>
+              <select
+                value={i18n.language}
+                onChange={(e) => i18n.changeLanguage(e.target.value)}
+                className="bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="es">Español</option>
+                <option value="en">English</option>
+              </select>
+            </div>
             <a
               href="https://genmypass.app/terms"
               target="_blank"
@@ -499,7 +556,7 @@ export default function SettingsPage() {
               className="px-6 py-4 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
             >
               <span className="text-sm font-medium text-slate-900 dark:text-white">
-                Terms of Service
+                {t("settings.terms")}
               </span>
               <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
             </a>
@@ -510,7 +567,7 @@ export default function SettingsPage() {
               className="px-6 py-4 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
             >
               <span className="text-sm font-medium text-slate-900 dark:text-white">
-                Privacy Policy
+                {t("settings.privacy")}
               </span>
               <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
             </a>
@@ -518,11 +575,11 @@ export default function SettingsPage() {
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse shrink-0" />
                 <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                  Application up to date
+                  {t("settings.appUpToDate")}
                 </span>
               </div>
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                v1.0.0
+                {t("settings.version")}
               </span>
             </div>
           </div>
@@ -539,7 +596,7 @@ export default function SettingsPage() {
             className="text-red-500 text-sm font-bold opacity-70 hover:opacity-100 transition-opacity flex items-center gap-2"
           >
             <Trash2 className="w-4 h-4" />
-            Permanently Delete Vault
+            {t("settings.deleteVaultPermanently")}
           </button>
         </div>
       </main>
@@ -553,18 +610,16 @@ export default function SettingsPage() {
                 <Trash2 className="w-8 h-8 text-red-500" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                Delete Vault Permanently?
+                {t("settings.deleteVaultConfirmTitle")}
               </h3>
               <p className="text-slate-500 dark:text-slate-400 text-sm">
-                This will permanently delete all your passwords and data. This
-                action cannot be undone.
+                {t("settings.deleteVaultDesc")}
               </p>
             </div>
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Type <span className="font-bold text-red-500">DELETE</span> to
-                confirm
+                {t("settings.typeDeleteToConfirm")}
               </label>
               <input
                 type="text"
@@ -572,7 +627,7 @@ export default function SettingsPage() {
                 onChange={(e) =>
                   setDeleteConfirmText(e.target.value.toUpperCase())
                 }
-                placeholder="DELETE"
+                placeholder={t("settings.typeDeletePlaceholder")}
                 className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
               />
             </div>
@@ -587,7 +642,7 @@ export default function SettingsPage() {
                   onClick={handleDeleteLocalOnly}
                   className="text-red-500 text-sm underline hover:no-underline"
                 >
-                  Delete local data only
+                  {t("settings.deleteLocalOnly")}
                 </button>
               </div>
             )}
@@ -602,7 +657,7 @@ export default function SettingsPage() {
                 }}
                 className="flex-1 px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -617,10 +672,10 @@ export default function SettingsPage() {
                 {isDeleting ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Deleting...
+                    {t("settings.deleting")}
                   </span>
                 ) : (
-                  "Delete Forever"
+                  t("settings.deleteForever")
                 )}
               </button>
             </div>

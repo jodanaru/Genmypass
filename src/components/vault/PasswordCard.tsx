@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Copy, Check, ChevronRight, Star } from "lucide-react";
 
 interface PasswordCardProps {
@@ -19,12 +20,14 @@ export function PasswordCard({
   username,
   iconBgColor = "bg-slate-100 dark:bg-slate-800",
   isFavorite = false,
-  lastUsed = "Never",
+  lastUsed,
   copySuccess = false,
   onCopy,
   onClick,
   onFavoriteClick,
 }: PasswordCardProps) {
+  const { t } = useTranslation();
+  const lastUsedDisplay = lastUsed != null ? t("vault.lastUsed", { time: lastUsed }) : null;
   return (
     <div
       onClick={onClick}
@@ -63,7 +66,7 @@ export function PasswordCard({
                     ? "text-primary-500 fill-primary-500 hover:bg-primary-500/10"
                     : "text-slate-400 hover:text-primary-500 hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
-                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                aria-label={isFavorite ? t("vault.ariaRemoveFavorite") : t("vault.ariaAddFavorite")}
               >
                 <Star
                   className={`w-4 h-4 ${isFavorite ? "fill-primary-500" : ""}`}
@@ -82,9 +85,11 @@ export function PasswordCard({
           <p className="text-slate-500 dark:text-slate-400 text-sm truncate">
             {username}
           </p>
+          {lastUsedDisplay != null && (
           <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">
-            Last used: {lastUsed}
+            {lastUsedDisplay}
           </p>
+        )}
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
@@ -99,7 +104,7 @@ export function PasswordCard({
               ? "text-primary-500"
               : "text-slate-400 hover:text-primary-500 hover:bg-slate-50 dark:hover:bg-slate-800"
           }`}
-          aria-label={copySuccess ? "Copied!" : "Copy password"}
+          aria-label={copySuccess ? t("vault.ariaCopied") : t("vault.ariaCopyPassword")}
         >
           {copySuccess ? (
             <Check className="w-5 h-5" />

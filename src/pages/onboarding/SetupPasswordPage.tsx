@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Moon, Sun } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
   ArrowRight,
@@ -32,6 +32,7 @@ interface PasswordState {
 const SYMBOL_REGEX = /[!@#$%^&*(),.?":{}|<>]/;
 
 export default function SetupPasswordPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const setMasterKey = useAuthStore((s) => s.setMasterKey);
   const [state, setState] = useState<PasswordState>({
@@ -42,15 +43,11 @@ export default function SetupPasswordPage() {
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isDark, setIsDark] = useState(
-    () =>
-      typeof document !== "undefined" &&
-      document.documentElement.classList.contains("dark")
-  );
   const [breachResult, setBreachResult] = useState<{
     breached: boolean;
     count: number;
   } | null>(null);
+  const [showZeroKnowledgeModal, setShowZeroKnowledgeModal] = useState(false);
 
   useEffect(() => {
     if (!state.password) {
@@ -62,11 +59,6 @@ export default function SetupPasswordPage() {
     }, 500);
     return () => window.clearTimeout(timer);
   }, [state.password]);
-
-  const toggleDarkMode = () => {
-    document.documentElement.classList.toggle("dark");
-    setIsDark(document.documentElement.classList.contains("dark"));
-  };
 
   const hasMinLength = state.password.length >= 12;
   const hasUpperAndLower =
@@ -90,11 +82,11 @@ export default function SetupPasswordPage() {
   };
 
   const strengthLabels: Record<number, string> = {
-    0: "Enter a password",
-    1: "Weak password",
-    2: "Fair password",
-    3: "Good password",
-    4: "Strong password",
+    0: t("onboarding.password.strengthEnter"),
+    1: t("onboarding.password.strengthWeak"),
+    2: t("onboarding.password.strengthFair"),
+    3: t("onboarding.password.strengthGood"),
+    4: t("onboarding.password.strengthStrong"),
   };
 
   const strengthColors = {
@@ -173,7 +165,7 @@ export default function SetupPasswordPage() {
       setError(
         err instanceof Error
           ? err.message
-          : "Error al configurar tu cuenta. Inténtalo de nuevo."
+          : t("onboarding.password.errorSetup")
       );
     } finally {
       setIsProcessing(false);
@@ -195,7 +187,7 @@ export default function SetupPasswordPage() {
             </span>
           </div>
           <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-            Step 2 of 4
+            {t("onboarding.stepOf", { current: 2, total: 4 })}
           </span>
         </div>
         <OnboardingProgress currentStep={2} totalSteps={4} />
@@ -205,11 +197,10 @@ export default function SetupPasswordPage() {
         <div className="max-w-[520px] w-full flex flex-col">
           <div className="pb-6 pt-2">
             <h1 className="text-slate-900 dark:text-white tracking-tight text-3xl font-bold leading-tight">
-              Create Master Password
+              {t("onboarding.password.title")}
             </h1>
             <p className="text-slate-500 dark:text-slate-400 mt-2">
-              Set a strong password to protect your digital life. This is the
-              only key to your vault.
+              {t("onboarding.password.subtitle")}
             </p>
           </div>
 
@@ -228,21 +219,20 @@ export default function SetupPasswordPage() {
               <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-500 font-bold">
                 <AlertTriangle className="w-5 h-5 shrink-0" />
                 <p className="text-base leading-tight">
-                  This password cannot be recovered.
+                  {t("onboarding.password.warningTitle")}
                 </p>
               </div>
               <p className="text-yellow-800/80 dark:text-yellow-400/80 text-sm leading-relaxed">
-                Write it down and keep it in a safe place. Genmypass is
-                zero-knowledge; if you lose this password, your data is gone
-                forever.
+                {t("onboarding.password.warningDesc")}
               </p>
-              <a
-                href="#"
+              <button
+                type="button"
+                onClick={() => setShowZeroKnowledgeModal(true)}
                 className="text-sm font-bold leading-normal tracking-tight flex items-center gap-1 text-primary-500 hover:underline mt-1"
               >
-                Learn about zero-knowledge
+                {t("onboarding.password.learnZeroKnowledge")}
                 <ArrowRight className="w-4 h-4 shrink-0" />
-              </a>
+              </button>
             </div>
           </div>
 
@@ -251,7 +241,7 @@ export default function SetupPasswordPage() {
             {/* Master Password */}
             <div className="flex flex-col gap-2">
               <label className="text-slate-900 dark:text-white text-sm font-semibold leading-normal">
-                Master Password
+                {t("onboarding.password.masterPassword")}
               </label>
               <div className="relative">
                 <input
@@ -260,7 +250,7 @@ export default function SetupPasswordPage() {
                   onChange={(e) =>
                     setState((s) => ({ ...s, password: e.target.value }))
                   }
-                  placeholder="Enter a strong master password"
+                  placeholder={t("onboarding.password.placeholder")}
                   className="w-full h-14 px-4 pr-12 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all outline-none"
                   autoComplete="new-password"
                 />
@@ -270,7 +260,7 @@ export default function SetupPasswordPage() {
                     setState((s) => ({ ...s, showPassword: !s.showPassword }))
                   }
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-500 transition-colors"
-                  aria-label={state.showPassword ? "Hide password" : "Show password"}
+                  aria-label={state.showPassword ? t("onboarding.password.ariaHidePassword") : t("onboarding.password.ariaShowPassword")}
                 >
                   {state.showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -310,10 +300,10 @@ export default function SetupPasswordPage() {
             {/* Requirements checklist */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg">
               {[
-                { met: hasMinLength, label: "12+ characters" },
-                { met: hasUpperAndLower, label: "Uppercase & lowercase" },
-                { met: hasNumber, label: "At least one number" },
-                { met: hasSymbol, label: "At least one symbol" },
+                { met: hasMinLength, label: t("onboarding.password.requirementChars") },
+                { met: hasUpperAndLower, label: t("onboarding.password.requirementUpperLower") },
+                { met: hasNumber, label: t("onboarding.password.requirementNumber") },
+                { met: hasSymbol, label: t("onboarding.password.requirementSymbol") },
               ].map((req, i) => (
                 <div
                   key={i}
@@ -340,7 +330,7 @@ export default function SetupPasswordPage() {
             {/* Confirm Master Password */}
             <div className="flex flex-col gap-2">
               <label className="text-slate-900 dark:text-white text-sm font-semibold leading-normal">
-                Confirm Master Password
+                {t("onboarding.password.confirmPassword")}
               </label>
               <div className="relative">
                 <input
@@ -352,7 +342,7 @@ export default function SetupPasswordPage() {
                       confirmPassword: e.target.value,
                     }))
                   }
-                  placeholder="Repeat your master password"
+                  placeholder={t("onboarding.password.placeholderConfirm")}
                   className="w-full h-14 px-4 pr-12 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all outline-none"
                   autoComplete="new-password"
                 />
@@ -367,8 +357,8 @@ export default function SetupPasswordPage() {
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-500 transition-colors"
                   aria-label={
                     state.showConfirmPassword
-                      ? "Hide password"
-                      : "Show password"
+                      ? t("onboarding.password.ariaHidePassword")
+                      : t("onboarding.password.ariaShowPassword")
                   }
                 >
                   {state.showConfirmPassword ? (
@@ -414,16 +404,16 @@ export default function SetupPasswordPage() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                       />
                     </svg>
-                    Creating your vault...
+                    {t("onboarding.password.creatingVault")}
                   </span>
                 ) : (
-                  "Continue to Vault"
+                  t("onboarding.password.continueToVault")
                 )}
               </button>
               <p className="text-center text-slate-500 dark:text-slate-400 text-xs mt-4 leading-relaxed">
-                This password encrypts your vault locally on this device.
+                {t("onboarding.password.footerNote")}
                 <br />
-                Your data never leaves your device unencrypted.
+                {t("onboarding.password.footerEncrypts")}
               </p>
             </div>
           </div>
@@ -431,20 +421,43 @@ export default function SetupPasswordPage() {
       </main>
 
       <footer className="py-8 px-6 text-center text-slate-400 dark:text-slate-500 text-xs">
-        <p>© 2024 Genmypass. AES-256 Bit Encryption Standard.</p>
+        <p>© 2024 Genmypass. {t("landing.featureEncryption")}.</p>
       </footer>
 
-      <div className="fixed bottom-6 right-6">
-        <button
-          type="button"
-          onClick={toggleDarkMode}
-          className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
-          aria-label={isDark ? "Activar modo claro" : "Activar modo oscuro"}
+      {/* Zero-knowledge modal */}
+      {showZeroKnowledgeModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="zero-knowledge-modal-title"
+          onClick={() => setShowZeroKnowledgeModal(false)}
         >
-          <Moon className="w-6 h-6 block dark:hidden" />
-          <Sun className="w-6 h-6 hidden dark:block" />
-        </button>
-      </div>
+          <div
+            className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3
+              id="zero-knowledge-modal-title"
+              className="text-lg font-bold text-slate-900 dark:text-white mb-4"
+            >
+              {t("onboarding.password.learnZeroKnowledgeModal.title")}
+            </h3>
+            <div className="space-y-3 text-slate-600 dark:text-slate-400 text-sm mb-6">
+              <p>{t("onboarding.password.learnZeroKnowledgeModal.paragraph1")}</p>
+              <p>{t("onboarding.password.learnZeroKnowledgeModal.paragraph2")}</p>
+              <p>{t("onboarding.password.learnZeroKnowledgeModal.paragraph3")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowZeroKnowledgeModal(false)}
+              className="w-full py-3 px-4 rounded-lg bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-colors"
+            >
+              {t("common.close")}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

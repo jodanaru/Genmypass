@@ -1,5 +1,6 @@
 import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   Check,
@@ -33,6 +34,7 @@ interface LocationState {
 }
 
 export default function EntryFormPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
@@ -230,7 +232,7 @@ export default function EntryFormPage() {
     setSaveError("");
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
-      setNameError("Name is required.");
+      setNameError(t("entry.nameRequired"));
       return;
     }
     setIsSaving(true);
@@ -264,7 +266,7 @@ export default function EntryFormPage() {
       navigate("/vault");
     } catch (err) {
       console.error("Error saving entry:", err);
-      setSaveError("Error saving. Check your connection.");
+      setSaveError(t("entry.saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -272,9 +274,7 @@ export default function EntryFormPage() {
 
   const handleDelete = useCallback(async () => {
     if (!id) return;
-    const confirmed = window.confirm(
-      "Delete this password? This action cannot be undone."
-    );
+    const confirmed = window.confirm(t("entry.deleteConfirm"));
     if (!confirmed) return;
     setIsDeleting(true);
     setSaveError("");
@@ -284,7 +284,7 @@ export default function EntryFormPage() {
       navigate("/vault");
     } catch (err) {
       console.error("Error deleting entry:", err);
-      setSaveError("Error deleting. Check your connection.");
+      setSaveError(t("entry.deleteError"));
     } finally {
       setIsDeleting(false);
     }
@@ -300,12 +300,12 @@ export default function EntryFormPage() {
           <Link
             to={cancelTo}
             className="shrink-0 p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            aria-label="Back"
+            aria-label={t("entry.ariaBack")}
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <h2 className="text-lg font-bold leading-tight tracking-tight text-[var(--text)] truncate">
-            {isNew ? "New password" : "Edit password"}
+            {isNew ? t("entry.newPassword") : t("entry.editPassword")}
           </h2>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -313,7 +313,7 @@ export default function EntryFormPage() {
             to={cancelTo}
             className="flex min-w-[84px] items-center justify-center rounded-lg h-10 px-4 bg-slate-100 dark:bg-slate-800 text-[var(--text)] text-sm font-bold transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
           >
-            Cancel
+            {t("entry.cancel")}
           </Link>
           <button
             type="submit"
@@ -321,7 +321,7 @@ export default function EntryFormPage() {
             disabled={isSaving}
             className="flex min-w-[84px] items-center justify-center rounded-lg h-10 px-4 bg-primary-500 text-white text-sm font-bold shadow-sm hover:bg-primary-600 disabled:opacity-50 transition-all"
           >
-            Save
+            {t("entry.save")}
           </button>
           {!isNew && id && (
             <button
@@ -329,7 +329,7 @@ export default function EntryFormPage() {
               onClick={handleDelete}
               disabled={isDeleting}
               className="flex items-center justify-center rounded-lg h-10 w-10 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50 transition-colors"
-              aria-label="Delete password"
+              aria-label={t("entry.ariaDelete")}
             >
               <Trash2 className="w-5 h-5" />
             </button>
@@ -358,7 +358,7 @@ export default function EntryFormPage() {
             <div className="space-y-4">
               <label htmlFor="entry-name" className="flex flex-col gap-2">
                 <span className="text-sm font-semibold text-[var(--text)]">
-                  Name <span className="text-red-500" aria-hidden>*</span>
+                  {t("entry.name")} <span className="text-red-500" aria-hidden>*</span>
                 </span>
                 <input
                   ref={firstFieldRef}
@@ -369,7 +369,7 @@ export default function EntryFormPage() {
                     setTitle(e.target.value);
                     if (nameError) setNameError("");
                   }}
-                  placeholder="e.g., Google Account"
+                  placeholder={t("entry.placeholderName")}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 h-12 px-4 text-base placeholder:text-slate-400 disabled:opacity-50"
                   aria-required="true"
                   aria-invalid={!!nameError}
@@ -384,7 +384,7 @@ export default function EntryFormPage() {
 
               <label htmlFor="entry-url" className="flex flex-col gap-2">
                 <span className="text-sm font-semibold text-[var(--text)]">
-                  Website URL
+                  {t("entry.websiteUrl")}
                 </span>
                 <div className="flex w-full items-stretch">
                   <div className="flex border border-slate-300 dark:border-slate-600 border-r-0 rounded-l-lg bg-slate-50 dark:bg-slate-800 items-center justify-center px-3 text-slate-500 dark:text-slate-400">
@@ -395,7 +395,7 @@ export default function EntryFormPage() {
                     type="url"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://google.com"
+                    placeholder={t("entry.placeholderUrl")}
                     className="flex-1 rounded-r-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 h-12 px-4 text-base placeholder:text-slate-400"
                   />
                 </div>
@@ -403,14 +403,14 @@ export default function EntryFormPage() {
 
               <label htmlFor="entry-username" className="flex flex-col gap-2">
                 <span className="text-sm font-semibold text-[var(--text)]">
-                  Username
+                  {t("entry.username")}
                 </span>
                 <input
                   id="entry-username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Email or username"
+                  placeholder={t("entry.placeholderUsername")}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 h-12 px-4 text-base placeholder:text-slate-400"
                 />
               </label>
@@ -418,7 +418,7 @@ export default function EntryFormPage() {
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-semibold text-[var(--text)]">
-                    Password
+                    {t("entry.password")}
                   </span>
                   <button
                     type="button"
@@ -427,7 +427,7 @@ export default function EntryFormPage() {
                     className="text-xs font-bold text-primary-500 hover:underline disabled:opacity-50 disabled:no-underline flex items-center gap-1"
                   >
                     <Wand2 className="w-3.5 h-3.5" aria-hidden />
-                    Generate
+                    {t("entry.generate")}
                   </button>
                 </div>
                 <div className="flex w-full items-stretch">
@@ -436,7 +436,7 @@ export default function EntryFormPage() {
                     type={passwordVisible ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter password"
+                    placeholder={t("entry.placeholderPassword")}
                     className="flex-1 rounded-l-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 h-12 px-4 text-base placeholder:text-slate-400 font-mono"
                     autoComplete="new-password"
                   />
@@ -444,7 +444,7 @@ export default function EntryFormPage() {
                     type="button"
                     onClick={() => setPasswordVisible((v) => !v)}
                     className="flex border border-slate-300 dark:border-slate-600 border-l-0 bg-white dark:bg-slate-900 items-center justify-center px-3 text-slate-500 dark:text-slate-400 hover:text-primary-500 transition-colors"
-                    aria-label={passwordVisible ? "Hide password" : "Show password"}
+                    aria-label={passwordVisible ? t("entry.ariaHidePassword") : t("entry.ariaShowPassword")}
                   >
                     {passwordVisible ? (
                       <EyeOff className="w-5 h-5" />
@@ -461,7 +461,7 @@ export default function EntryFormPage() {
                         ? "text-primary-500"
                         : "text-slate-500 dark:text-slate-400 hover:text-primary-500"
                     }`}
-                    aria-label={copySuccess ? "Copied!" : "Copy password"}
+                    aria-label={copySuccess ? t("entry.ariaCopied") : t("entry.ariaCopyPassword")}
                   >
                     {copySuccess ? (
                       <Check className="w-5 h-5" />
@@ -485,7 +485,7 @@ export default function EntryFormPage() {
                       ))}
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Strength:{" "}
+                      {t("entry.strength")}:{" "}
                       <span className={`font-bold ${getStrengthTextColorClass(strength)}`}>
                         {strength.label}
                       </span>
@@ -500,11 +500,11 @@ export default function EntryFormPage() {
               {/* Generator options */}
               <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 space-y-4">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Generator settings
+                  {t("entry.generatorSettings")}
                 </h3>
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-sm font-medium text-[var(--text)]">
-                    Length
+                    {t("entry.length")}
                   </span>
                   <span className="px-3 py-1 bg-primary-500/10 text-primary-500 rounded-lg font-bold text-sm">
                     {genLength}
@@ -518,7 +518,7 @@ export default function EntryFormPage() {
                     value={genLength}
                     onChange={(e) => setGenLength(Number(e.target.value))}
                     className="w-full h-1.5 rounded-full appearance-none bg-slate-300 dark:bg-slate-600 cursor-pointer accent-primary-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary-500 [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary-500"
-                    aria-label="Password length"
+                    aria-label={t("entry.ariaLength")}
                   />
                 </div>
                 <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium">
@@ -528,32 +528,32 @@ export default function EntryFormPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {[
                     {
-                      label: "Uppercase (A-Z)",
+                      label: t("entry.uppercase"),
                       value: genUppercase,
                       set: setGenUppercase,
                     },
                     {
-                      label: "Lowercase (a-z)",
+                      label: t("entry.lowercase"),
                       value: genLowercase,
                       set: setGenLowercase,
                     },
                     {
-                      label: "Numbers (0-9)",
+                      label: t("entry.numbers"),
                       value: genNumbers,
                       set: setGenNumbers,
                     },
                     {
-                      label: "Symbols (!@#$)",
+                      label: t("entry.symbols"),
                       value: genSymbols,
                       set: setGenSymbols,
                     },
                     {
-                      label: "Exclude ambiguous (0O1lI)",
+                      label: t("entry.excludeAmbiguous"),
                       value: genExcludeAmbiguous,
                       set: setGenExcludeAmbiguous,
                     },
                     {
-                      label: "Allow duplicate characters",
+                      label: t("entry.allowDuplicate"),
                       value: genAllowDuplicate,
                       set: setGenAllowDuplicate,
                     },
@@ -590,13 +590,13 @@ export default function EntryFormPage() {
             <div className="border-t border-slate-200 dark:border-slate-800 pt-6 space-y-4">
               <label htmlFor="entry-notes" className="flex flex-col gap-2">
                 <span className="text-sm font-semibold text-[var(--text)]">
-                  Notes
+                  {t("entry.notes")}
                 </span>
                 <textarea
                   id="entry-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add extra details, backup codes, or security questions..."
+                  placeholder={t("entry.notesPlaceholder")}
                   rows={4}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 min-h-[100px] p-4 text-base placeholder:text-slate-400 resize-y"
                 />
@@ -604,7 +604,7 @@ export default function EntryFormPage() {
 
               <label htmlFor="entry-folder" className="flex flex-col gap-2">
                 <span className="text-sm font-semibold text-[var(--text)]">
-                  Category
+                  {t("entry.category")}
                 </span>
                 <select
                   id="entry-folder"
@@ -612,7 +612,7 @@ export default function EntryFormPage() {
                   onChange={(e) => setFolderId(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 h-12 px-4 text-base"
                 >
-                  <option value="">Uncategorized</option>
+                  <option value="">{t("entry.uncategorized")}</option>
                   {folders.map((f) => (
                     <option key={f.id} value={f.id}>
                       {f.name}
@@ -631,10 +631,10 @@ export default function EntryFormPage() {
                   />
                   <div>
                     <span className="text-sm font-medium text-[var(--text)] block">
-                      Add to favorites
+                      {t("entry.addToFavorites")}
                     </span>
                     <span className="text-xs text-slate-500 dark:text-slate-400">
-                      Show in Favorites tab
+                      {t("entry.showInFavoritesTab")}
                     </span>
                   </div>
                 </div>
@@ -646,7 +646,7 @@ export default function EntryFormPage() {
                   className={`w-10 h-6 rounded-full relative flex items-center px-1 cursor-pointer transition-colors shrink-0 ${
                     favorite ? "bg-primary-500" : "bg-slate-300 dark:bg-slate-600"
                   }`}
-                  aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
+                  aria-label={favorite ? t("entry.ariaRemoveFavorite") : t("entry.ariaAddFavorite")}
                 >
                   <span
                     className={`size-4 bg-white rounded-full shadow-sm block transition-transform ${
@@ -665,11 +665,10 @@ export default function EntryFormPage() {
                 className="w-full bg-primary-500 text-white font-bold h-14 rounded-lg shadow-md hover:bg-primary-600 disabled:opacity-50 transition-all active:scale-[0.99] flex items-center justify-center gap-2"
               >
                 <Save className="w-5 h-5" aria-hidden />
-                Save password
+                {t("entry.savePassword")}
               </button>
               <p className="text-center text-xs text-slate-500 dark:text-slate-400">
-                This data will be encrypted with your master password before
-                being stored.
+                {t("entry.footerEncrypt")}
               </p>
             </div>
           </form>

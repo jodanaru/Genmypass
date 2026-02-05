@@ -1,20 +1,22 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ShieldCheck, KeyRound, Settings } from "lucide-react";
 
 const NAV_ITEMS = [
-  { path: "/vault", icon: ShieldCheck, label: "Vault" },
-  { path: "/generator", icon: KeyRound, label: "Generator" },
-  { path: "/settings", icon: Settings, label: "Settings" },
+  { path: "/vault", icon: ShieldCheck, labelKey: "nav.vault" as const },
+  { path: "/generator", icon: KeyRound, labelKey: "nav.generator" as const },
+  { path: "/settings", icon: Settings, labelKey: "nav.settings" as const },
 ] as const;
 
 export function BottomNav() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 h-20 flex justify-center items-center z-50"
-      aria-label="Navegación principal"
+      aria-label={t("nav.ariaMain")}
     >
       <div className="flex w-full max-w-[1280px] px-8 justify-between items-center">
         {NAV_ITEMS.map((item) => {
@@ -37,7 +39,7 @@ export function BottomNav() {
                 aria-hidden
               />
               <span className="text-[10px] font-bold uppercase tracking-wider">
-                {item.label}
+                {t(item.labelKey)}
               </span>
               {isActive && (
                 <div

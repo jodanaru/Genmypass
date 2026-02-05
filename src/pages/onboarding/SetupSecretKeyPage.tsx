@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   KeyRound,
   AlertTriangle,
@@ -9,8 +10,6 @@ import {
   Printer,
   HelpCircle,
   AlertCircle,
-  Moon,
-  Sun,
 } from "lucide-react";
 import { OnboardingProgress } from "@/components/onboarding";
 
@@ -32,7 +31,10 @@ interface SecretKeyState {
 
 const COPY_FEEDBACK_MS = 2000;
 
+type HelpModal = "whereToStore" | "whatIfLose" | null;
+
 export default function SetupSecretKeyPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [state, setState] = useState<SecretKeyState>({
     secretKey: "",
@@ -40,22 +42,13 @@ export default function SetupSecretKeyPage() {
     hasCopied: false,
     hasDownloaded: false,
   });
-  const [isDark, setIsDark] = useState(
-    () =>
-      typeof document !== "undefined" &&
-      document.documentElement.classList.contains("dark")
-  );
+  const [helpModal, setHelpModal] = useState<HelpModal>(null);
 
   useEffect(() => {
     setState((s) => ({ ...s, secretKey: generateSecretKey() }));
   }, []);
 
   const canComplete = state.hasConfirmed;
-
-  const toggleDarkMode = () => {
-    document.documentElement.classList.toggle("dark");
-    setIsDark(document.documentElement.classList.contains("dark"));
-  };
 
   const handleCopy = async () => {
     if (!state.secretKey) return;
@@ -114,7 +107,7 @@ Generated: ${new Date().toISOString()}
             </span>
           </div>
           <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-            Step 4 of 4
+            {t("onboarding.stepOf", { current: 4, total: 4 })}
           </span>
         </div>
         <OnboardingProgress currentStep={4} totalSteps={4} />
@@ -128,11 +121,10 @@ Generated: ${new Date().toISOString()}
               <KeyRound className="w-10 h-10" />
             </div>
             <h1 className="text-slate-900 dark:text-white tracking-tight text-[32px] font-bold leading-tight text-center">
-              Save Your Secret Key
+              {t("onboarding.secretKey.title")}
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-center mt-2 max-w-md">
-              This key is required to decrypt your vault on new devices. We do
-              not store a copy of it.
+              {t("onboarding.secretKey.subtitle")}
             </p>
           </div>
 
@@ -143,11 +135,10 @@ Generated: ${new Date().toISOString()}
             </div>
             <div className="flex flex-col gap-1 min-w-0">
               <p className="text-red-800 dark:text-red-400 text-base font-bold leading-tight">
-                CRITICAL: Action Required
+                {t("onboarding.secretKey.criticalTitle")}
               </p>
               <p className="text-red-700 dark:text-red-300/80 text-sm">
-                Without this file + your password, your vault CANNOT be
-                recovered. There is no &apos;forgot password&apos; option.
+                {t("onboarding.secretKey.criticalDesc")}
               </p>
             </div>
           </div>
@@ -155,18 +146,18 @@ Generated: ${new Date().toISOString()}
           {/* Secret key card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 block">
-              Your Private Secret Key
+              {t("onboarding.secretKey.yourSecretKey")}
             </label>
             <div className="relative">
               <div className="bg-slate-50 dark:bg-slate-950 font-mono text-sm sm:text-base break-all p-4 pr-12 rounded-lg border border-slate-100 dark:border-slate-800 leading-relaxed text-slate-900 dark:text-slate-300 select-all">
-                {state.secretKey || "Generating…"}
+                {state.secretKey || t("onboarding.secretKey.generating")}
               </div>
               <button
                 type="button"
                 onClick={handleCopy}
                 disabled={!state.secretKey}
                 className="absolute top-2 right-2 p-2 rounded text-slate-400 hover:text-primary-500 hover:bg-white dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-                aria-label="Copy secret key"
+                aria-label={t("onboarding.secretKey.copyAria")}
               >
                 {state.hasCopied ? (
                   <Check className="w-5 h-5 text-green-500" />
@@ -183,7 +174,7 @@ Generated: ${new Date().toISOString()}
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg h-12 px-6 bg-primary-500 text-white text-sm font-bold transition-all hover:bg-primary-600 hover:shadow-lg hover:shadow-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download className="w-5 h-5 shrink-0" />
-                <span>Download Secret Key (.txt)</span>
+                <span>{t("onboarding.secretKey.downloadTxt")}</span>
               </button>
               <button
                 type="button"
@@ -191,7 +182,7 @@ Generated: ${new Date().toISOString()}
                 className="flex items-center justify-center gap-2 rounded-lg h-12 px-6 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 <Printer className="w-5 h-5 shrink-0" />
-                <span>Print</span>
+                <span>{t("onboarding.secretKey.print")}</span>
               </button>
             </div>
           </div>
@@ -210,8 +201,7 @@ Generated: ${new Date().toISOString()}
                 />
               </div>
               <span className="text-sm sm:text-base text-slate-700 dark:text-slate-300 select-none group-hover:text-primary-500 transition-colors">
-                I have saved my secret key in a safe place, such as a physical
-                safe or an offline storage device.
+                {t("onboarding.secretKey.savedCheckbox")}
               </span>
             </label>
             <button
@@ -224,41 +214,112 @@ Generated: ${new Date().toISOString()}
                   : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed"
               }`}
             >
-              Complete Setup
+              {t("onboarding.secretKey.completeSetup")}
             </button>
           </div>
 
-          {/* Footer links */}
+          {/* Footer help links */}
           <div className="flex flex-col sm:flex-row justify-center gap-6 mt-4 pb-4">
-            <a
-              href="#"
+            <button
+              type="button"
+              onClick={() => setHelpModal("whereToStore")}
               className="flex items-center gap-1.5 text-primary-500 text-sm font-medium hover:underline"
             >
               <HelpCircle className="w-5 h-5 shrink-0" />
-              Where should I store this?
-            </a>
-            <a
-              href="#"
+              {t("onboarding.secretKey.whereToStore")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setHelpModal("whatIfLose")}
               className="flex items-center gap-1.5 text-red-500/80 text-sm font-medium hover:underline"
             >
               <AlertCircle className="w-5 h-5 shrink-0" />
-              What if I lose it?
-            </a>
+              {t("onboarding.secretKey.whatIfLose")}
+            </button>
           </div>
         </div>
       </main>
 
-      <div className="fixed bottom-6 right-6">
-        <button
-          type="button"
-          onClick={toggleDarkMode}
-          className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
-          aria-label={isDark ? "Activar modo claro" : "Activar modo oscuro"}
+      {/* Where to store modal */}
+      {helpModal === "whereToStore" && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="where-to-store-modal-title"
+          onClick={() => setHelpModal(null)}
         >
-          <Moon className="w-6 h-6 block dark:hidden" />
-          <Sun className="w-6 h-6 hidden dark:block" />
-        </button>
-      </div>
+          <div
+            className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3
+              id="where-to-store-modal-title"
+              className="text-lg font-bold text-slate-900 dark:text-white mb-4"
+            >
+              {t("onboarding.secretKey.whereToStoreModal.title")}
+            </h3>
+            <div className="space-y-3 text-sm text-slate-600 dark:text-slate-400 mb-6">
+              <p className="font-medium text-slate-700 dark:text-slate-300">
+                {t("onboarding.secretKey.whereToStoreModal.recommended")}
+              </p>
+              <ul className="list-disc list-inside space-y-1.5 pl-1">
+                <li>{t("onboarding.secretKey.whereToStoreModal.recommended1")}</li>
+                <li>{t("onboarding.secretKey.whereToStoreModal.recommended2")}</li>
+                <li>{t("onboarding.secretKey.whereToStoreModal.recommended3")}</li>
+              </ul>
+              <p className="font-medium text-slate-700 dark:text-slate-300 pt-1">
+                {t("onboarding.secretKey.whereToStoreModal.avoid")}
+              </p>
+              <ul className="list-disc list-inside space-y-1 pl-1">
+                <li>{t("onboarding.secretKey.whereToStoreModal.avoid1")}</li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              onClick={() => setHelpModal(null)}
+              className="w-full py-3 px-4 rounded-lg bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-colors"
+            >
+              {t("common.close")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* What if I lose it modal */}
+      {helpModal === "whatIfLose" && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="what-if-lose-modal-title"
+          onClick={() => setHelpModal(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3
+              id="what-if-lose-modal-title"
+              className="text-lg font-bold text-slate-900 dark:text-white mb-4"
+            >
+              {t("onboarding.secretKey.whatIfLoseModal.title")}
+            </h3>
+            <div className="space-y-3 text-sm text-slate-600 dark:text-slate-400 mb-6">
+              <p>{t("onboarding.secretKey.whatIfLoseModal.p1")}</p>
+              <p>{t("onboarding.secretKey.whatIfLoseModal.p2")}</p>
+              <p>{t("onboarding.secretKey.whatIfLoseModal.p3")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setHelpModal(null)}
+              className="w-full py-3 px-4 rounded-lg bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-colors"
+            >
+              {t("common.close")}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

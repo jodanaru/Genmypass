@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ShieldAlert, ChevronRight } from "lucide-react";
 import type { VaultEntry } from "@/stores/vault-store";
 
@@ -26,6 +27,7 @@ export function AuditResultCard({
   breachCount,
   onChangePassword,
 }: AuditResultCardProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-4 px-4 py-3 border-b border-slate-100 dark:border-slate-700 last:border-b-0 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
       <div className="flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-500/10 shrink-0 w-10 h-10">
@@ -33,13 +35,13 @@ export function AuditResultCard({
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-medium text-slate-900 dark:text-white truncate">
-          {entry.title || "Untitled"}
+          {entry.title || t("settings.audit.untitled")}
         </p>
         <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
           {maskUsername(entry.username ?? "")}
         </p>
         <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
-          Found in {breachCount.toLocaleString()} breach{breachCount !== 1 ? "es" : ""}
+          {t("settings.audit.foundInBreach", { count: breachCount })}
         </p>
       </div>
       <button
@@ -47,7 +49,7 @@ export function AuditResultCard({
         onClick={onChangePassword}
         className="shrink-0 flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-bold text-primary-500 hover:bg-primary-500/10 transition-colors"
       >
-        Change
+        {t("settings.audit.change")}
         <ChevronRight className="w-4 h-4" />
       </button>
     </div>

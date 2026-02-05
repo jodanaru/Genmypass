@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { AlertTriangle } from "lucide-react";
 
 interface BreachWarningProps {
@@ -6,6 +7,7 @@ interface BreachWarningProps {
 }
 
 export function BreachWarning({ breachCount, className = "" }: BreachWarningProps) {
+  const { t } = useTranslation();
   return (
     <div
       role="alert"
@@ -13,8 +15,7 @@ export function BreachWarning({ breachCount, className = "" }: BreachWarningProp
     >
       <AlertTriangle className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
       <p className="text-sm font-medium">
-        This password appeared in {breachCount.toLocaleString()} data breach
-        {breachCount !== 1 ? "es" : ""}.
+        {t("vault.breachWarning", { count: breachCount })}
       </p>
     </div>
   );

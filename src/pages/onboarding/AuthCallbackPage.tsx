@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { handleOAuthCallback } from "@/lib/google-drive/oauth";
 import { setTokens } from "@/lib/google-drive/token-manager";
 import { findVaultFile } from "@/lib/google-drive";
@@ -7,11 +8,12 @@ import { findVaultFile } from "@/lib/google-drive";
 type CallbackState = "processing" | "checking_vault" | "success" | "error";
 
 export default function AuthCallbackPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [state, setState] = useState<CallbackState>("processing");
   const [error, setError] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState(
-    "Verificando autorización..."
+  const [statusMessageKey, setStatusMessageKey] = useState(
+    "onboarding.callback.verifying"
   );
 
   useEffect(() => {
@@ -22,7 +24,7 @@ export default function AuthCallbackPage() {
         if (!result.success) {
           setState("error");
           setError(
-            result.errorDescription || result.error || "Error desconocido"
+            result.errorDescription || result.error || t("errors.unknown")
           );
           return;
         }
@@ -41,7 +43,7 @@ export default function AuthCallbackPage() {
         }
 
         setState("checking_vault");
-        setStatusMessage("Buscando tu vault...");
+        setStatusMessageKey("onboarding.callback.findingVault");
 
         const existingVault = await findVaultFile();
         const forceNewSetup =
@@ -62,7 +64,7 @@ export default function AuthCallbackPage() {
           localStorage.setItem("genmypass_oauth_complete", "true");
 
           setState("success");
-          setStatusMessage("¡Vault encontrado! Redirigiendo...");
+          setStatusMessageKey("onboarding.callback.vaultFound");
 
           setTimeout(() => {
             navigate("/lock", { replace: true });
@@ -71,7 +73,7 @@ export default function AuthCallbackPage() {
           localStorage.setItem("genmypass_oauth_complete", "true");
 
           setState("success");
-          setStatusMessage("¡Conexión exitosa! Configurando tu cuenta...");
+          setStatusMessageKey("onboarding.callback.setupAccount");
 
           setTimeout(() => {
             navigate("/setup/password", { replace: true });
@@ -83,13 +85,13 @@ export default function AuthCallbackPage() {
         setError(
           err instanceof Error
             ? err.message
-            : "Error procesando autenticación"
+            : t("onboarding.callback.errorAuth")
         );
       }
     };
 
     processCallback();
-  }, [navigate]);
+  }, [navigate, t]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 px-4">
@@ -118,10 +120,10 @@ export default function AuthCallbackPage() {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-              Conectando con Google Drive
+              {t("onboarding.callback.connectingDrive")}
             </h1>
             <p className="text-slate-500 dark:text-slate-400">
-              {statusMessage}
+              {t(statusMessageKey)}
             </p>
           </>
         )}
@@ -144,10 +146,10 @@ export default function AuthCallbackPage() {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-              ¡Conexión exitosa!
+              {t("onboarding.callback.successTitle")}
             </h1>
             <p className="text-slate-500 dark:text-slate-400">
-              {statusMessage}
+              {t(statusMessageKey)}
             </p>
           </>
         )}
@@ -170,7 +172,7 @@ export default function AuthCallbackPage() {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-              Error de conexión
+              {t("onboarding.callback.errorTitle")}
             </h1>
             <p className="text-red-600 dark:text-red-400 mb-6">{error}</p>
             <button
@@ -178,7 +180,7 @@ export default function AuthCallbackPage() {
               onClick={() => navigate("/connect")}
               className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
             >
-              Intentar de nuevo
+              {t("common.tryAgain")}
             </button>
           </>
         )}

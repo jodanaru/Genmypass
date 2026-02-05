@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   Lock,
-  SlidersHorizontal,
   Plus,
   ShieldCheck,
   AlertTriangle,
@@ -14,6 +14,7 @@ import { useClipboard } from "@/hooks/useClipboard";
 import { useVaultStore } from "@/stores/vault-store";
 import type { VaultEntry, Folder } from "@/stores/vault-store";
 import { getCategoryBgClass, UNCATEGORIZED_BG } from "@/lib/category-colors";
+import { useFormatRelative } from "@/lib/format-relative";
 
 type FilterTab = "all" | "favorites" | "recent";
 
@@ -29,31 +30,19 @@ function getEntryIconBg(entry: VaultEntry, folders: Folder[]): string {
   return folder ? getCategoryBgClass(folder.color) : UNCATEGORIZED_BG;
 }
 
-const formatLastUsed = (dateStr: string): string => {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffHours < 1) return "Just now";
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  return date.toLocaleDateString();
-};
-
-function buildFolderChips(folders: Folder[]): { id: string; name: string }[] {
-  const allChip = { id: "", name: "All" };
-  if (folders.length === 0) return [allChip];
-  return [allChip, ...folders.map((f) => ({ id: f.id, name: f.name }))];
-}
-
 export default function VaultPage() {
+  const { t } = useTranslation();
+  const formatRelative = useFormatRelative();
   const navigate = useNavigate();
   const { entries, folders, isLoading, error, save } = useVault();
   const { copy } = useClipboard();
   const toggleFavorite = useVaultStore((s) => s.toggleFavorite);
+
+  const folderChips = useMemo(() => {
+    const allChip = { id: "", name: t("vault.all") };
+    if (folders.length === 0) return [allChip];
+    return [allChip, ...folders.map((f) => ({ id: f.id, name: f.name }))];
+  }, [folders, t]);
 
   const [state, setState] = useState<VaultPageState>({
     searchQuery: "",
@@ -95,11 +84,6 @@ export default function VaultPage() {
   const favoriteCount = useMemo(
     () => entries.filter((e) => e.favorite).length,
     [entries]
-  );
-
-  const folderChips = useMemo(
-    () => buildFolderChips(folders),
-    [folders]
   );
 
   const handleCopy = async (entryId: string, password: string) => {
@@ -148,7 +132,7 @@ export default function VaultPage() {
             />
           </svg>
           <p className="text-slate-500 dark:text-slate-400">
-            Decrypting your vault...
+            {t("vault.decrypting")}
           </p>
         </div>
       </div>
@@ -164,7 +148,7 @@ export default function VaultPage() {
             aria-hidden
           />
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-            Error
+            {t("errors.title")}
           </h2>
           <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
           <button
@@ -172,7 +156,7 @@ export default function VaultPage() {
             onClick={() => navigate("/connect")}
             className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-lg transition-colors"
           >
-            Volver a conectar
+            {t("vault.reconnect")}
           </button>
         </div>
       </div>
@@ -188,22 +172,15 @@ export default function VaultPage() {
             <ShieldCheck className="w-5 h-5" aria-hidden />
           </div>
           <h2 className="text-slate-900 dark:text-white text-xl font-bold">
-            Genmypass
+            {t("lock.title")}
           </h2>
         </div>
         <div className="flex gap-3">
           <button
             type="button"
-            className="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-            aria-label="Search"
-          >
-            <Search className="w-5 h-5" />
-          </button>
-          <button
-            type="button"
             onClick={handleLock}
             className="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-            aria-label="Lock vault"
+            aria-label={t("vault.ariaLock")}
           >
             <Lock className="w-5 h-5" />
           </button>
@@ -224,30 +201,23 @@ export default function VaultPage() {
                 onChange={(e) =>
                   setState((s) => ({ ...s, searchQuery: e.target.value }))
                 }
-                placeholder="Search credentials..."
+                placeholder={t("vault.searchPlaceholder")}
                 className="flex-1 border-none bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 px-4 text-base outline-none"
               />
             </div>
           </div>
-          <button
-            type="button"
-            className="h-12 w-12 flex items-center justify-center bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-primary-500 transition-colors"
-            aria-label="Filter"
-          >
-            <SlidersHorizontal className="w-5 h-5" />
-          </button>
         </div>
 
         {/* Tabs */}
         <div className="flex h-12 items-center justify-center rounded-xl bg-slate-200 dark:bg-slate-800 p-1.5 mb-6">
           {(
             [
-              { key: "all" as const, label: `All (${entries.length})` },
+              { key: "all" as const, label: `${t("vault.all")} (${entries.length})` },
               {
                 key: "favorites" as const,
-                label: `Favorites (${favoriteCount})`,
+                label: `${t("vault.favorites")} (${favoriteCount})`,
               },
-              { key: "recent" as const, label: "Recent" },
+              { key: "recent" as const, label: t("vault.recent") },
             ] as const
           ).map((tab) => (
             <button
@@ -285,10 +255,10 @@ export default function VaultPage() {
               <Lock className="w-10 h-10 text-slate-400" aria-hidden />
             </div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-              Your vault is empty
+              {t("vault.emptyTitle")}
             </h3>
             <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-xs">
-              Add your first password to start securing your digital life
+              {t("vault.emptySubtitle")}
             </p>
             <button
               type="button"
@@ -296,7 +266,7 @@ export default function VaultPage() {
               className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
-              Add Password
+              {t("vault.addPassword")}
             </button>
           </div>
         ) : (
@@ -309,7 +279,7 @@ export default function VaultPage() {
                 username={entry.username}
                 iconBgColor={getEntryIconBg(entry, folders)}
                 isFavorite={entry.favorite}
-                lastUsed={formatLastUsed(entry.updatedAt)}
+                lastUsed={formatRelative(entry.updatedAt)}
                 copySuccess={copiedEntryId === entry.id}
                 onCopy={() => handleCopy(entry.id, entry.password)}
                 onClick={() => navigate(`/entry/${entry.id}/edit`)}
@@ -325,7 +295,7 @@ export default function VaultPage() {
         type="button"
         onClick={() => navigate("/entry/new")}
         className="fixed bottom-24 right-8 size-14 bg-primary-500 text-white rounded-full flex items-center justify-center shadow-xl shadow-primary-500/40 hover:scale-105 active:scale-95 transition-transform z-40"
-        aria-label="Add new password"
+        aria-label={t("vault.ariaAddPassword")}
       >
         <Plus className="w-8 h-8" />
       </button>

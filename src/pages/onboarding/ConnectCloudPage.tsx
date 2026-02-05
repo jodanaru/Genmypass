@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { OnboardingProgress } from "@/components/onboarding";
 import { generatePKCE, initiateOAuthFlow } from "@/lib/google-drive/oauth";
 
@@ -42,34 +43,6 @@ function InfoIcon() {
   );
 }
 
-function DarkModeIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className="w-6 h-6"
-      aria-hidden
-    >
-      <path d="M12 3a9 9 0 1 0 9 9c-.893 0-1.687-.12-2.37-.334A9.001 9.001 0 0 1 12 3Z" />
-    </svg>
-  );
-}
-
-function LightModeIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className="w-6 h-6"
-      aria-hidden
-    >
-      <path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM18.894 6.166a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.59-1.59ZM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75ZM17.834 18.894a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.061 1.06l1.59 1.591ZM12 18a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V18.75A.75.75 0 0 1 12 18ZM7.758 17.303a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.591-1.59ZM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12ZM6.697 7.757a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 0 0-1.061 1.06l1.59 1.591Z" />
-    </svg>
-  );
-}
-
 function ArrowForwardIcon() {
   return (
     <svg
@@ -89,18 +62,10 @@ function ArrowForwardIcon() {
 }
 
 export default function ConnectCloudPage() {
+  const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isDark, setIsDark] = useState(
-    () =>
-      typeof document !== "undefined" &&
-      document.documentElement.classList.contains("dark")
-  );
-
-  const toggleDarkMode = () => {
-    document.documentElement.classList.toggle("dark");
-    setIsDark(document.documentElement.classList.contains("dark"));
-  };
+  const [showWhyStorageModal, setShowWhyStorageModal] = useState(false);
 
   const handleGoogleDriveConnect = async () => {
     try {
@@ -111,7 +76,7 @@ export default function ConnectCloudPage() {
       // La página se redirige a Google, no se ejecuta nada más
     } catch (err) {
       console.error("Error iniciando OAuth:", err);
-      setError("No se pudo conectar con Google Drive. Inténtalo de nuevo.");
+      setError(t("onboarding.connect.errorDrive"));
       setIsConnecting(false);
     }
   };
@@ -131,7 +96,7 @@ export default function ConnectCloudPage() {
             </span>
           </div>
           <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-            Step 1 of 4
+            {t("onboarding.stepOf", { current: 1, total: 4 })}
           </span>
         </div>
         <OnboardingProgress currentStep={1} totalSteps={4} />
@@ -141,10 +106,10 @@ export default function ConnectCloudPage() {
         <div className="max-w-xl w-full">
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
-              Connect Your Storage
+              {t("onboarding.connect.title")}
             </h1>
             <p className="text-slate-600 dark:text-slate-400 text-lg">
-              Your encrypted vault will be stored in your personal cloud.
+              {t("onboarding.connect.subtitle")}
             </p>
           </div>
 
@@ -168,7 +133,7 @@ export default function ConnectCloudPage() {
                 type="button"
                 onClick={() => setError(null)}
                 className="text-red-500 hover:text-red-700 dark:hover:text-red-300"
-                aria-label="Cerrar"
+                aria-label={t("common.close")}
               >
                 <svg
                   className="w-4 h-4"
@@ -188,7 +153,7 @@ export default function ConnectCloudPage() {
             {/* Google Drive card */}
             <div className="bg-white dark:bg-slate-800 border-2 border-primary-500 p-6 rounded-xl shadow-sm relative transition-all hover:shadow-md group">
               <div className="absolute -top-3 left-6 bg-primary-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
-                Recommended
+                {t("onboarding.connect.recommended")}
               </div>
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-4 min-w-0">
@@ -197,10 +162,10 @@ export default function ConnectCloudPage() {
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-semibold text-slate-900 dark:text-white text-lg">
-                      Google Drive
+                      {t("onboarding.connect.googleDrive")}
                     </h3>
                     <p className="text-slate-500 dark:text-slate-400 text-sm">
-                      15 GB free storage
+                      {t("onboarding.connect.freeStorage")}
                     </p>
                   </div>
                 </div>
@@ -232,11 +197,11 @@ export default function ConnectCloudPage() {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                         />
                       </svg>
-                      Conectando...
+                      {t("common.connecting")}
                     </>
                   ) : (
                     <>
-                      Connect
+                      {t("onboarding.connect.connect")}
                       <ArrowForwardIcon />
                     </>
                   )}
@@ -253,10 +218,10 @@ export default function ConnectCloudPage() {
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-semibold text-slate-600 dark:text-slate-400 text-lg">
-                      Dropbox
+                      {t("onboarding.connect.dropbox")}
                     </h3>
                     <span className="inline-flex items-center px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase mt-1">
-                      Coming Soon
+                      {t("onboarding.connect.comingSoon")}
                     </span>
                   </div>
                 </div>
@@ -265,7 +230,7 @@ export default function ConnectCloudPage() {
                   disabled
                   className="bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 px-6 py-2.5 rounded-lg font-semibold cursor-not-allowed shrink-0"
                 >
-                  Connect
+                  {t("onboarding.connect.connect")}
                 </button>
               </div>
             </div>
@@ -274,32 +239,52 @@ export default function ConnectCloudPage() {
           <div className="mt-12 text-center">
             <button
               type="button"
+              onClick={() => setShowWhyStorageModal(true)}
               className="inline-flex items-center gap-2 text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors group"
             >
               <InfoIcon />
               <span className="underline underline-offset-4 decoration-2 decoration-primary-500/20 group-hover:decoration-primary-500">
-                Why do we need this storage connection?
+                {t("onboarding.connect.whyStorage")}
               </span>
             </button>
           </div>
         </div>
       </main>
 
-      <div className="fixed bottom-6 right-6">
-        <button
-          type="button"
-          onClick={toggleDarkMode}
-          className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
-          aria-label={isDark ? "Activar modo claro" : "Activar modo oscuro"}
+      {/* Why storage modal */}
+      {showWhyStorageModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="why-storage-modal-title"
+          onClick={() => setShowWhyStorageModal(false)}
         >
-          <span className="block dark:hidden">
-            <DarkModeIcon />
-          </span>
-          <span className="hidden dark:block">
-            <LightModeIcon />
-          </span>
-        </button>
-      </div>
+          <div
+            className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3
+              id="why-storage-modal-title"
+              className="text-lg font-bold text-slate-900 dark:text-white mb-4"
+            >
+              {t("onboarding.connect.whyStorageModal.title")}
+            </h3>
+            <div className="space-y-3 text-slate-600 dark:text-slate-400 text-sm mb-6">
+              <p>{t("onboarding.connect.whyStorageModal.paragraph1")}</p>
+              <p>{t("onboarding.connect.whyStorageModal.paragraph2")}</p>
+              <p>{t("onboarding.connect.whyStorageModal.paragraph3")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowWhyStorageModal(false)}
+              className="w-full py-3 px-4 rounded-lg bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-colors"
+            >
+              {t("common.close")}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

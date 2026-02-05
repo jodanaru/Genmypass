@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Lock,
   X,
@@ -51,6 +52,7 @@ function formatTimeAgo(date: Date): string {
 }
 
 export default function GeneratorPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { copy } = useClipboard();
 
@@ -165,14 +167,14 @@ export default function GeneratorPage() {
             <Lock className="w-8 h-8" aria-hidden />
           </div>
           <h2 className="text-lg font-bold leading-tight tracking-tight text-content-heading dark:text-white">
-            Password Generator
+            {t("generator.title")}
           </h2>
         </div>
         <button
           type="button"
           onClick={() => navigate("/vault")}
           className="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-200 dark:bg-slate-600 text-content-heading dark:text-white hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors"
-          aria-label="Close"
+          aria-label={t("generator.ariaClose")}
         >
           <X className="w-5 h-5" />
         </button>
@@ -202,7 +204,7 @@ export default function GeneratorPage() {
                 className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 text-white rounded-lg transition-colors backdrop-blur-sm"
               >
                 <RefreshCw className="w-4 h-4" />
-                <span className="text-sm font-medium">Regenerate</span>
+                <span className="text-sm font-medium">{t("generator.regenerate")}</span>
               </button>
               <button
                 type="button"
@@ -211,7 +213,7 @@ export default function GeneratorPage() {
                 className="flex items-center gap-2 px-4 py-2 bg-white text-primary-500 hover:bg-white/90 rounded-lg transition-colors shadow-sm font-bold disabled:opacity-50"
               >
                 <Copy className="w-4 h-4" />
-                <span className="text-sm">{copySuccess ? "Copied!" : "Copy"}</span>
+                <span className="text-sm">{copySuccess ? t("generator.copied") : t("generator.copy")}</span>
               </button>
             </div>
           </div>
@@ -238,12 +240,12 @@ export default function GeneratorPage() {
 
         <div className="space-y-4">
           <h3 className="text-sm font-bold uppercase tracking-wider text-content-muted dark:text-slate-400 px-1">
-            Settings
+            {t("generator.settings")}
           </h3>
           <div className="bg-surface dark:bg-slate-800 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-content-heading dark:text-white text-base font-medium">
-                Password Length
+                {t("generator.passwordLength")}
               </p>
               <span className="px-3 py-1 bg-primary-500/10 text-primary-500 rounded-lg font-bold text-sm">
                 {length}
@@ -261,7 +263,7 @@ export default function GeneratorPage() {
                   setDefaultPasswordLength(v);
                 }}
                 className="w-full h-1.5 rounded-full appearance-none bg-slate-300 dark:bg-slate-600 cursor-pointer accent-primary-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary-500 [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary-500"
-                aria-label="Password length"
+                aria-label={t("entry.ariaLength")}
               />
             </div>
             <div className="flex justify-between mt-2 text-[10px] text-content-muted font-medium">
@@ -273,37 +275,37 @@ export default function GeneratorPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[
               {
-                label: "Uppercase (A-Z)",
+                label: t("entry.uppercase"),
                 value: uppercase,
                 set: setUppercase,
                 sync: setIncludeUppercase,
               },
               {
-                label: "Lowercase (a-z)",
+                label: t("entry.lowercase"),
                 value: lowercase,
                 set: setLowercase,
                 sync: setIncludeLowercase,
               },
               {
-                label: "Numbers (0-9)",
+                label: t("entry.numbers"),
                 value: numbers,
                 set: setNumbers,
                 sync: setIncludeNumbers,
               },
               {
-                label: "Symbols (!@#$)",
+                label: t("entry.symbols"),
                 value: symbols,
                 set: setSymbols,
                 sync: setIncludeSymbols,
               },
               {
-                label: "Exclude ambiguous (0O1lI)",
+                label: t("entry.excludeAmbiguous"),
                 value: excludeAmbiguousLocal,
                 set: setExcludeAmbiguousLocal,
                 sync: setExcludeAmbiguousCharacters,
               },
               {
-                label: "Allow duplicate characters",
+                label: t("entry.allowDuplicate"),
                 value: allowDuplicateLocal,
                 set: setAllowDuplicateLocal,
                 sync: setAllowDuplicateCharacters,
@@ -342,11 +344,11 @@ export default function GeneratorPage() {
 
         <div className="space-y-3">
           <h3 className="text-sm font-bold uppercase tracking-wider text-content-muted dark:text-slate-400 px-1">
-            Recent
+            {t("generator.recent")}
           </h3>
           <div className="space-y-2">
             {recent.length === 0 ? (
-              <p className="text-sm text-content-muted py-2">No recent passwords.</p>
+              <p className="text-sm text-content-muted py-2">{t("generator.noRecent")}</p>
             ) : (
               recent.map((entry) => (
                 <div
@@ -368,7 +370,7 @@ export default function GeneratorPage() {
                       setRevealedId((id) => (id === entry.id ? null : entry.id))
                     }
                     className="shrink-0 p-1 text-content-muted hover:text-primary-500 transition-colors"
-                    aria-label={revealedId === entry.id ? "Hide password" : "Reveal password"}
+                    aria-label={revealedId === entry.id ? t("generator.ariaHide") : t("generator.ariaReveal")}
                   >
                     {revealedId === entry.id ? (
                       <EyeOff className="w-5 h-5" />
@@ -391,7 +393,7 @@ export default function GeneratorPage() {
           className="w-full flex items-center justify-center gap-2 h-14 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white rounded-xl text-base font-bold transition-all shadow-lg shadow-primary-500/20"
         >
           <CheckCircle className="w-5 h-5" />
-          Use This Password
+          {t("generator.useThisPassword")}
         </button>
       </div>
     </div>

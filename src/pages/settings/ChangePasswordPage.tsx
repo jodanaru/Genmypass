@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
   Eye,
@@ -34,6 +35,7 @@ const SYMBOL_REGEX = /[!@#$%^&*(),.?":{}|<>]/;
 const SECURITY_MODE_KEY = "genmypass_security_mode";
 
 export default function ChangePasswordPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const masterKey = useAuthStore((s) => s.masterKey);
   const setMasterKey = useAuthStore((s) => s.setMasterKey);
@@ -74,11 +76,11 @@ export default function ChangePasswordPage() {
   };
 
   const strengthLabels: Record<number, string> = {
-    0: "Enter a password",
-    1: "Weak password",
-    2: "Fair password",
-    3: "Good password",
-    4: "Strong password",
+    0: t("onboarding.password.strengthEnter"),
+    1: t("onboarding.password.strengthWeak"),
+    2: t("onboarding.password.strengthFair"),
+    3: t("onboarding.password.strengthGood"),
+    4: t("onboarding.password.strengthStrong"),
   };
 
   const strengthColors = {
@@ -122,11 +124,11 @@ export default function ChangePasswordPage() {
         : null);
 
     if (!currentVault || !currentFileId) {
-      setError("No se encontró el vault. Abre el vault e inténtalo de nuevo.");
+      setError(t("settings.changePassword.errorVaultNotFound"));
       return;
     }
     if (!salt) {
-      setError("No se pudo obtener la configuración del vault.");
+      setError(t("settings.changePassword.errorNoConfig"));
       return;
     }
 
@@ -140,7 +142,7 @@ export default function ChangePasswordPage() {
         fromBase64(salt)
       );
       if (!timingSafeEqual(derivedKey, masterKey)) {
-        setError("Contraseña actual incorrecta.");
+        setError(t("settings.changePassword.errorWrongPassword"));
         return;
       }
 
@@ -198,7 +200,7 @@ export default function ChangePasswordPage() {
       setError(
         err instanceof Error
           ? err.message
-          : "Error al guardar el vault. Comprueba la conexión."
+          : t("settings.changePassword.errorSave")
       );
     } finally {
       setIsProcessing(false);
@@ -215,9 +217,9 @@ export default function ChangePasswordPage() {
               type="button"
               onClick={handleCancel}
               className="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-              aria-label="Volver"
+              aria-label={t("settings.changePassword.ariaBack")}
             >
-              <span className="sr-only">Cancel</span>
+              <span className="sr-only">{t("common.cancel")}</span>
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -233,7 +235,7 @@ export default function ChangePasswordPage() {
               </svg>
             </button>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-              Change Master Password
+              {t("settings.changePassword.title")}
             </h1>
           </div>
           <button
@@ -241,7 +243,7 @@ export default function ChangePasswordPage() {
             onClick={handleCancel}
             className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
         </div>
       </header>
@@ -251,12 +253,10 @@ export default function ChangePasswordPage() {
         <div className="p-5 rounded-lg border border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-900/30 flex flex-col gap-1">
           <p className="text-yellow-800 dark:text-yellow-200 text-base font-bold leading-tight flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 shrink-0" />
-            Security Warning
+            {t("settings.changePassword.securityWarning")}
           </p>
           <p className="text-yellow-700 dark:text-yellow-300/80 text-sm font-normal leading-normal">
-            Changing your master password will re-encrypt your entire vault.
-            This may take a few minutes. Please do not close the browser during
-            this process.
+            {t("settings.changePassword.securityWarningDesc")}
           </p>
         </div>
 
@@ -274,7 +274,7 @@ export default function ChangePasswordPage() {
               htmlFor="current-password"
               className="text-slate-900 dark:text-slate-200 text-sm font-semibold"
             >
-              Current Master Password
+              {t("settings.changePassword.currentPassword")}
             </label>
             <div className="flex w-full items-stretch">
               <input
@@ -287,7 +287,7 @@ export default function ChangePasswordPage() {
                   setError(null);
                 }}
                 autoComplete="current-password"
-                placeholder="Enter current password"
+                placeholder={t("settings.changePassword.placeholderCurrent")}
                 className="flex-1 rounded-lg rounded-r-none border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white h-12 px-4 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
                 disabled={isProcessing}
               />
@@ -295,7 +295,7 @@ export default function ChangePasswordPage() {
                 type="button"
                 onClick={() => setShowCurrent((s) => !s)}
                 className="flex items-center justify-center px-4 border border-l-0 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 rounded-r-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
-                aria-label={showCurrent ? "Hide password" : "Show password"}
+                aria-label={showCurrent ? t("entry.ariaHidePassword") : t("entry.ariaShowPassword")}
               >
                 {showCurrent ? (
                   <EyeOff className="w-5 h-5" />
@@ -312,7 +312,7 @@ export default function ChangePasswordPage() {
               htmlFor="new-password"
               className="text-slate-900 dark:text-slate-200 text-sm font-semibold"
             >
-              New Master Password
+              {t("settings.changePassword.newPassword")}
             </label>
             <div className="flex w-full items-stretch">
               <input
@@ -321,7 +321,7 @@ export default function ChangePasswordPage() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 autoComplete="new-password"
-                placeholder="Enter new password"
+                placeholder={t("settings.changePassword.placeholderNew")}
                 className="flex-1 rounded-lg rounded-r-none border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white h-12 px-4 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
                 disabled={isProcessing}
               />
@@ -329,7 +329,7 @@ export default function ChangePasswordPage() {
                 type="button"
                 onClick={() => setShowNew((s) => !s)}
                 className="flex items-center justify-center px-4 border border-l-0 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 rounded-r-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
-                aria-label={showNew ? "Hide password" : "Show password"}
+                aria-label={showNew ? t("entry.ariaHidePassword") : t("entry.ariaShowPassword")}
               >
                 {showNew ? (
                   <EyeOff className="w-5 h-5" />
@@ -361,10 +361,10 @@ export default function ChangePasswordPage() {
             </div>
             <div className="grid grid-cols-2 gap-2 mt-2">
               {[
-                { met: hasMinLength, label: "12+ characters" },
-                { met: hasUpperAndLower, label: "Upper & lowercase" },
-                { met: hasNumber, label: "Numbers" },
-                { met: hasSymbol, label: "Special symbol" },
+                { met: hasMinLength, label: t("onboarding.password.requirementChars") },
+                { met: hasUpperAndLower, label: t("onboarding.password.requirementUpperLower") },
+                { met: hasNumber, label: t("entry.numbers") },
+                { met: hasSymbol, label: t("entry.symbols") },
               ].map((req, i) => (
                 <div
                   key={i}
@@ -395,7 +395,7 @@ export default function ChangePasswordPage() {
               htmlFor="confirm-password"
               className="text-slate-900 dark:text-slate-200 text-sm font-semibold"
             >
-              Confirm New Password
+              {t("settings.changePassword.confirmPassword")}
             </label>
             <div className="flex w-full items-stretch">
               <input
@@ -404,7 +404,7 @@ export default function ChangePasswordPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
-                placeholder="Re-type new password"
+                placeholder={t("settings.changePassword.placeholderConfirm")}
                 className="flex-1 rounded-lg rounded-r-none border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white h-12 px-4 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
                 disabled={isProcessing}
               />
@@ -412,7 +412,7 @@ export default function ChangePasswordPage() {
                 type="button"
                 onClick={() => setShowConfirm((s) => !s)}
                 className="flex items-center justify-center px-4 border border-l-0 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 rounded-r-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
-                aria-label={showConfirm ? "Hide password" : "Show password"}
+                aria-label={showConfirm ? t("entry.ariaHidePassword") : t("entry.ariaShowPassword")}
               >
                 {showConfirm ? (
                   <EyeOff className="w-5 h-5" />
@@ -429,12 +429,10 @@ export default function ChangePasswordPage() {
               <Info className="w-5 h-5 shrink-0 text-primary-500" />
               <div className="flex-1 min-w-0">
                 <p className="text-primary-600 dark:text-primary-400 text-sm font-bold">
-                  Dual-key Mode Enabled
+                  {t("settings.changePassword.dualKeyTitle")}
                 </p>
                 <p className="text-primary-600/80 dark:text-primary-400/80 text-xs leading-relaxed mt-0.5">
-                  Your account is protected by dual-key encryption. Changing
-                  your master password updates your cloud encryption key, but your
-                  local device keys remain unchanged.
+                  {t("settings.changePassword.dualKeyDesc")}
                 </p>
               </div>
             </div>
@@ -448,7 +446,7 @@ export default function ChangePasswordPage() {
             className="w-full py-4 bg-red-600 hover:bg-red-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold rounded-lg shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2"
           >
             <Lock className="w-5 h-5" />
-            Change Password
+            {t("settings.changePassword.submit")}
           </button>
         </div>
       </main>
@@ -485,10 +483,10 @@ export default function ChangePasswordPage() {
             </div>
             <div className="text-center">
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                Re-encrypting vault...
+                {t("settings.changePassword.reEncrypting")}
               </h3>
               <p className="text-slate-500 dark:text-slate-400 text-sm">
-                Please do not refresh the page or close your browser tab.
+                {t("settings.changePassword.reEncryptingDesc")}
               </p>
             </div>
           </div>

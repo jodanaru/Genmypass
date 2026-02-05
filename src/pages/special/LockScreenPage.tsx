@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Lock, Eye, EyeOff, Shield } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
@@ -15,11 +16,11 @@ import {
   fromBase64,
 } from "@/lib/crypto";
 
-const NO_TOKEN_MESSAGE =
-  "Google Drive session expired. Reconnect your account to unlock your vault.";
-
-const CONFIG_NOT_FOUND_MESSAGE =
-  "Configuración del vault no encontrada. Configura tu cuenta de nuevo.";
+const LOCK_NO_TOKEN_KEY = "lock.noToken";
+const LOCK_CONFIG_NOT_FOUND_KEY = "lock.configNotFound";
+const LOCK_VAULT_NOT_FOUND_KEY = "lock.vaultNotFound";
+const LOCK_VAULT_GONE_KEY = "lock.vaultGone";
+const LOCK_WRONG_PASSWORD_KEY = "lock.wrongPasswordOrError";
 
 interface EncryptedVault {
   salt?: string;
@@ -34,7 +35,16 @@ function clearVaultState() {
   localStorage.removeItem("genmypass_salt");
 }
 
+const LOCK_ERROR_KEYS = [
+  LOCK_NO_TOKEN_KEY,
+  LOCK_CONFIG_NOT_FOUND_KEY,
+  LOCK_VAULT_NOT_FOUND_KEY,
+  LOCK_VAULT_GONE_KEY,
+  LOCK_WRONG_PASSWORD_KEY,
+];
+
 export default function LockScreenPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const setMasterKey = useAuthStore((s) => s.setMasterKey);
   const [password, setPassword] = useState("");
@@ -43,7 +53,8 @@ export default function LockScreenPage() {
   const [error, setError] = useState<string | null>(null);
   const [needsSetupAgain, setNeedsSetupAgain] = useState(false);
 
-  const needsReconnect = error === NO_TOKEN_MESSAGE;
+  const needsReconnect = error === LOCK_NO_TOKEN_KEY;
+  const errorDisplay = error && LOCK_ERROR_KEYS.includes(error) ? t(error) : error;
 
   useEffect(() => {
     const fileId = localStorage.getItem("genmypass_vault_file_id");
@@ -52,7 +63,7 @@ export default function LockScreenPage() {
       return;
     }
     if (fileId && !getAccessToken()) {
-      setError(NO_TOKEN_MESSAGE);
+      setError(LOCK_NO_TOKEN_KEY);
     }
   }, [navigate]);
 
@@ -65,7 +76,7 @@ export default function LockScreenPage() {
     if (!password.trim() || isUnlocking) return;
 
     if (!getAccessToken()) {
-      setError(NO_TOKEN_MESSAGE);
+      setError(LOCK_NO_TOKEN_KEY);
       return;
     }
 
@@ -77,9 +88,7 @@ export default function LockScreenPage() {
       if (!fileId) {
         clearVaultState();
         setNeedsSetupAgain(true);
-        setError(
-          "No se encontró el vault. Configura tu cuenta de nuevo."
-        );
+        setError(LOCK_VAULT_NOT_FOUND_KEY);
         return;
       }
 
@@ -96,7 +105,7 @@ export default function LockScreenPage() {
         );
         clearVaultState();
         setNeedsSetupAgain(true);
-        setError(CONFIG_NOT_FOUND_MESSAGE);
+        setError(LOCK_CONFIG_NOT_FOUND_KEY);
         return;
       }
 
@@ -118,7 +127,7 @@ export default function LockScreenPage() {
     } catch (err) {
       console.error("Unlock error:", err);
       const message =
-        err instanceof Error ? err.message : "Contraseña incorrecta o error al cargar el vault.";
+        err instanceof Error ? err.message : t(LOCK_WRONG_PASSWORD_KEY);
       const isNoToken =
         message === "No hay token de acceso disponible" ||
         (message.includes("token") && message.includes("disponible"));
@@ -138,9 +147,9 @@ export default function LockScreenPage() {
         }
         clearVaultState();
         setNeedsSetupAgain(true);
-        setError("El vault ya no existe. Configura tu cuenta de nuevo.");
+        setError(LOCK_VAULT_GONE_KEY);
       } else {
-        setError(isNoToken ? NO_TOKEN_MESSAGE : message);
+        setError(isNoToken ? LOCK_NO_TOKEN_KEY : message);
       }
     } finally {
       setIsUnlocking(false);
@@ -158,31 +167,31 @@ export default function LockScreenPage() {
             <Shield className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-primary-900 dark:text-white text-3xl font-bold tracking-tight mb-2">
-            Genmypass
+            {t("lock.title")}
           </h1>
           <div className="flex items-center gap-1.5 text-primary-500">
             <Lock className="w-4 h-4" />
             <p className="text-xs font-bold tracking-widest uppercase">
-              Vault is locked
+              {t("lock.locked")}
             </p>
           </div>
         </div>
 
         <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 flex flex-col shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700">
           <p className="text-slate-500 dark:text-slate-400 text-center text-sm mb-6 px-2 leading-relaxed font-medium">
-            Enter your master password to access your encrypted passwords.
+            {t("lock.enterPassword")}
           </p>
 
           {error && (
             <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+              <p className="text-red-600 dark:text-red-400 text-sm">{errorDisplay}</p>
               {needsReconnect && (
                 <button
                   type="button"
                   onClick={handleReconnect}
                   className="mt-3 w-full h-12 rounded-xl font-semibold text-sm text-white bg-primary-500 hover:bg-primary-600 transition-colors"
                 >
-                  Reconnect Google Drive
+                  {t("lock.reconnectDrive")}
                 </button>
               )}
               {needsSetupAgain && (
@@ -213,7 +222,7 @@ export default function LockScreenPage() {
                   }}
                   className="mt-3 w-full h-12 rounded-xl font-semibold text-sm text-white bg-primary-500 hover:bg-primary-600 transition-colors"
                 >
-                  Configurar de nuevo
+                  {t("lock.setupAgain")}
                 </button>
               )}
             </div>
@@ -225,7 +234,7 @@ export default function LockScreenPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-              placeholder="Master password"
+              placeholder={t("lock.placeholder")}
               autoComplete="current-password"
               className="w-full h-14 pl-4 pr-12 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all"
             />
@@ -233,7 +242,7 @@ export default function LockScreenPage() {
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-500 transition-colors"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? t("onboarding.password.ariaHidePassword") : t("onboarding.password.ariaShowPassword")}
             >
               {showPassword ? (
                 <EyeOff className="w-5 h-5" />
@@ -271,12 +280,12 @@ export default function LockScreenPage() {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                   />
                 </svg>
-                Unlocking...
+                {t("lock.unlocking")}
               </span>
             ) : (
               <>
                 <Lock className="w-5 h-5" />
-                Unlock
+                {t("lock.unlock")}
               </>
             )}
           </button>
@@ -284,13 +293,12 @@ export default function LockScreenPage() {
 
         <footer className="mt-12 text-center">
           <div className="flex items-center justify-center gap-4 text-slate-400 dark:text-slate-500 text-[10px] font-bold tracking-[0.15em] uppercase mb-4">
-            <span>AES-256 Encrypted</span>
+            <span>{t("lock.encrypted")}</span>
             <span className="w-1 h-1 bg-slate-300 dark:bg-slate-600 rounded-full" />
-            <span>Zero Knowledge</span>
+            <span>{t("lock.zeroKnowledge")}</span>
           </div>
           <p className="text-slate-400 dark:text-slate-500 text-xs px-6 leading-relaxed">
-            Protected by end-to-end encryption. Your data never leaves your
-            device unencrypted.
+            {t("lock.footer")}
           </p>
         </footer>
       </div>
