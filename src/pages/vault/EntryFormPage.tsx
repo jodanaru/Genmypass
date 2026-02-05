@@ -86,6 +86,7 @@ export default function EntryFormPage() {
   );
 
   const isFirstGeneratorConfigMount = useRef(true);
+  const firstFieldRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isNew) {
@@ -113,6 +114,12 @@ export default function EntryFormPage() {
       setSaveError("");
     }
   }, [isNew, entry, state?.generatedPassword]);
+
+  useEffect(() => {
+    if (isNew || (id && entry)) {
+      requestAnimationFrame(() => firstFieldRef.current?.focus());
+    }
+  }, [isNew, id, entry]);
 
   useEffect(() => {
     if (!isNew && id && entries.length > 0 && !entry) {
@@ -338,6 +345,7 @@ export default function EntryFormPage() {
                   Name <span className="text-red-500" aria-hidden>*</span>
                 </span>
                 <input
+                  ref={firstFieldRef}
                   id="entry-name"
                   type="text"
                   value={title}
