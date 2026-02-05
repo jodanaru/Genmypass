@@ -22,14 +22,15 @@ import {
 import { getSettingsForVault } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useVaultStore } from "@/stores/vault-store";
-import { saveVault } from "@/lib/google-drive";
 import {
+  saveVault,
   getStoredRefreshToken,
   decryptRefreshToken,
   encryptRefreshToken,
   storeRefreshToken,
   startAutoRefresh,
-} from "@/lib/google-drive";
+  getCurrentProvider,
+} from "@/lib/cloud-storage";
 
 const SYMBOL_REGEX = /[!@#$%^&*(),.?":{}|<>]/;
 const SECURITY_MODE_KEY = "genmypass_security_mode";
@@ -192,7 +193,8 @@ export default function ChangePasswordPage() {
       }
 
       setMasterKey(newKey);
-      startAutoRefresh(newKey);
+      const provider = getCurrentProvider();
+      if (provider) startAutoRefresh(newKey, provider);
 
       navigate("/settings", { replace: true });
     } catch (err) {

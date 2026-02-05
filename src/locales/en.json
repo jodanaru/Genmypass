@@ -45,6 +45,7 @@
       "setupAccount": "Connection successful! Setting up your account...",
       "errorAuth": "Error processing authentication",
       "connectingDrive": "Connecting to Google Drive",
+      "connectingDropbox": "Connecting to Dropbox",
       "successTitle": "Connection successful!",
       "errorTitle": "Connection error"
     },
@@ -281,7 +282,9 @@
     "googleDrive": "Google Drive",
     "connected": "Connected",
     "disconnect": "Disconnect",
-    "disconnectConfirm": "Are you sure you want to disconnect Google Drive? You will need to connect again to access your vault.",
+    "disconnectConfirm": "Are you sure you want to disconnect? You will need to connect again to access your vault.",
+    "disconnectAndSwitch": "Disconnect & Switch",
+    "disconnectAndSwitchConfirm": "You will be signed out from the current provider and taken to the connection screen. You can then choose another provider (Google Drive or Dropbox). If you already have a vault there you can unlock it; otherwise you can create a new one.",
     "securityAudit": "Security Audit",
     "checkBreached": "Check for Breached Passwords",
     "scanBreaches": "Scan your vault against known data breaches",

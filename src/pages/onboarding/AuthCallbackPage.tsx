@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { handleOAuthCallback } from "@/lib/google-drive/oauth";
-import { setTokens } from "@/lib/google-drive/token-manager";
-import { findVaultFile } from "@/lib/google-drive";
+import {
+  createProvider,
+  getStoredProvider,
+  setTokens,
+} from "@/lib/cloud-storage";
 
 type CallbackState = "processing" | "checking_vault" | "success" | "error";
 
@@ -15,11 +17,20 @@ export default function AuthCallbackPage() {
   const [statusMessageKey, setStatusMessageKey] = useState(
     "onboarding.callback.verifying"
   );
+  const providerName = getStoredProvider();
 
   useEffect(() => {
     const processCallback = async () => {
       try {
-        const result = await handleOAuthCallback();
+        const stored = getStoredProvider();
+        if (!stored) {
+          setState("error");
+          setError("No cloud provider selected");
+          return;
+        }
+
+        const provider = createProvider(stored);
+        const result = await provider.handleOAuthCallback();
 
         if (!result.success) {
           setState("error");
@@ -39,13 +50,16 @@ export default function AuthCallbackPage() {
             );
           }
 
-          localStorage.setItem("genmypass_cloud_provider", "google-drive");
+          const email = await provider.getUserEmail();
+          if (email) {
+            localStorage.setItem("genmypass_user_email", email);
+          }
         }
 
         setState("checking_vault");
         setStatusMessageKey("onboarding.callback.findingVault");
 
-        const existingVault = await findVaultFile();
+        const existingVault = await provider.findVaultFile();
         const forceNewSetup =
           localStorage.getItem("genmypass_force_new_setup") === "true";
 
@@ -120,7 +134,9 @@ export default function AuthCallbackPage() {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-              {t("onboarding.callback.connectingDrive")}
+              {providerName === "dropbox"
+                ? t("onboarding.callback.connectingDropbox")
+                : t("onboarding.callback.connectingDrive")}
             </h1>
             <p className="text-slate-500 dark:text-slate-400">
               {t(statusMessageKey)}

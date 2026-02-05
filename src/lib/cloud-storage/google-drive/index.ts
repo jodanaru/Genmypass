@@ -1,0 +1,78 @@
+import type {
+  CloudFile,
+  CloudProvider,
+  CloudStorageProvider,
+  OAuthResult,
+  TokenResponse,
+} from "../types.js";
+import * as oauth from "./oauth.js";
+import * as api from "./api.js";
+
+function getOAuthProxyBase(): string {
+  return (
+    import.meta.env.VITE_OAUTH_PROXY_URL ??
+    (typeof window !== "undefined" ? window.location.origin : "")
+  );
+}
+
+export const OAUTH_CALLBACK_PATH = oauth.OAUTH_CALLBACK_PATH;
+export { DriveApiError } from "./api.js";
+
+export class GoogleDriveProvider implements CloudStorageProvider {
+  readonly name: CloudProvider = "google-drive";
+
+  async initiateOAuth(verifier: string): Promise<void> {
+    await oauth.initiateOAuthFlow(verifier);
+  }
+
+  async handleOAuthCallback(): Promise<OAuthResult> {
+    return oauth.handleOAuthCallback();
+  }
+
+  async refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
+    const base = getOAuthProxyBase();
+    const response = await fetch(`${base}/api/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+      };
+      throw new Error(
+        err.error ?? err.message ?? `Refresh failed: ${response.status}`
+      );
+    }
+    const data = (await response.json()) as TokenResponse;
+    if (!data.access_token || data.token_type !== "Bearer") {
+      throw new Error("Respuesta de refresh inválida");
+    }
+    return data;
+  }
+
+  async findVaultFile(): Promise<CloudFile | null> {
+    return api.findVaultFile();
+  }
+
+  async createVaultFile(content: string): Promise<string> {
+    return api.createVaultFile(content);
+  }
+
+  async readVaultFile(fileId: string): Promise<string> {
+    return api.readVaultFile(fileId);
+  }
+
+  async updateVaultFile(fileId: string, content: string): Promise<void> {
+    return api.updateVaultFile(fileId, content);
+  }
+
+  async deleteVaultFile(fileId: string): Promise<void> {
+    return api.deleteVaultFile(fileId);
+  }
+
+  async getUserEmail(): Promise<string | null> {
+    return api.getUserEmail();
+  }
+}

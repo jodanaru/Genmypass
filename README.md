@@ -60,6 +60,18 @@ pnpm test:run    # una sola ejecución
 - **Vite**: alias `@/` → `src/`, PWA en `vite.config.ts`.
 - **Tailwind**: tema oscuro y paleta primary (blues) en `tailwind.config.js` y variables en `src/index.css`.
 
+### Almacenamiento en la nube (Google Drive / Dropbox)
+
+El vault cifrado se guarda en la nube. Copia `.env.example` a `.env.local` y define:
+
+- `VITE_GOOGLE_CLIENT_ID` y/o `VITE_DROPBOX_CLIENT_ID` según el proveedor que uses.
+- `VITE_OAUTH_PROXY_URL`: URL del worker que intercambia el código OAuth por tokens (el cliente no puede enviar el client_secret).
+
+El worker (`workers/oauth-proxy/`) necesita los secrets en Cloudflare:
+
+- Google: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- Dropbox: `DROPBOX_CLIENT_ID`, `DROPBOX_CLIENT_SECRET` (configurar con `wrangler secret put` desde la carpeta del worker).
+
 ## Licencia
 
 Véase [LICENSE](LICENSE).

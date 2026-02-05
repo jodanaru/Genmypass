@@ -28,6 +28,8 @@ const SESSION_KEYS = [
   "genmypass_vault_file_to_delete",
   "google_oauth_code_verifier",
   "google_oauth_state",
+  "dropbox_oauth_verifier",
+  "dropbox_oauth_state",
 ] as const;
 
 /**

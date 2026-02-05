@@ -4,11 +4,10 @@ import { useTranslation } from "react-i18next";
 import { Lock, Eye, EyeOff, Shield } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
-  readVaultFile,
+  getCurrentProvider,
   getAccessToken,
   startAutoRefresh,
-  deleteVaultFile,
-} from "@/lib/google-drive";
+} from "@/lib/cloud-storage";
 import {
   initSodium,
   deriveKey,
@@ -93,7 +92,12 @@ export default function LockScreenPage() {
       }
 
       await initSodium();
-      const encryptedContent = await readVaultFile(fileId);
+      const provider = getCurrentProvider();
+      if (!provider) {
+        setError(LOCK_NO_TOKEN_KEY);
+        return;
+      }
+      const encryptedContent = await provider.readVaultFile(fileId);
       const encrypted: EncryptedVault = JSON.parse(encryptedContent);
 
       const saltBase64 =
@@ -122,7 +126,7 @@ export default function LockScreenPage() {
       });
 
       setMasterKey(key);
-      startAutoRefresh(key);
+      startAutoRefresh(key, provider);
       navigate("/vault", { replace: true });
     } catch (err) {
       console.error("Unlock error:", err);
@@ -205,9 +209,10 @@ export default function LockScreenPage() {
                     const fileIdToDelete = sessionStorage.getItem(
                       "genmypass_vault_file_to_delete"
                     );
-                    if (fileIdToDelete && getAccessToken()) {
+                    const cloudProvider = getCurrentProvider();
+                    if (fileIdToDelete && getAccessToken() && cloudProvider) {
                       try {
-                        await deleteVaultFile(fileIdToDelete);
+                        await cloudProvider.deleteVaultFile(fileIdToDelete);
                       } catch {
                         // Ignore: AuthCallbackPage will use the flag
                       }

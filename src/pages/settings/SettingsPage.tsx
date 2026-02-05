@@ -21,7 +21,7 @@ import {
 import { useSettingsStore, type AutoLockTime } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useVaultStore } from "@/stores/vault-store";
-import { clearSessionTokens, deleteVaultFile } from "@/lib/google-drive";
+import { clearSessionTokens, getCurrentProvider, getStoredProvider } from "@/lib/cloud-storage";
 import { clearAllGenmypassStorage } from "@/lib/clear-vault-data";
 import { useFormatRelative } from "@/lib/format-relative";
 
@@ -72,13 +72,30 @@ export default function SettingsPage() {
     setAllowDuplicateCharacters,
   } = useSettingsStore();
 
-  const userEmail =
+  const [displayEmail, setDisplayEmail] = useState<string>(() =>
     typeof localStorage !== "undefined"
       ? localStorage.getItem("genmypass_user_email") || "account@gmail.com"
-      : "account@gmail.com";
+      : "account@gmail.com"
+  );
   const isConnected =
     typeof localStorage !== "undefined" &&
     !!localStorage.getItem("genmypass_vault_file_id");
+  const currentProvider = getStoredProvider();
+
+  useEffect(() => {
+    if (!isConnected || displayEmail !== "account@gmail.com") return;
+    const provider = getCurrentProvider();
+    if (!provider) return;
+    provider
+      .getUserEmail()
+      .then((email) => {
+        if (email) {
+          localStorage.setItem("genmypass_user_email", email);
+          setDisplayEmail(email);
+        }
+      })
+      .catch(() => {});
+  }, [isConnected, displayEmail]);
 
   const handleDisconnect = () => {
     if (confirm(t("settings.disconnectConfirm"))) {
@@ -86,10 +103,29 @@ export default function SettingsPage() {
       if (typeof localStorage !== "undefined") {
         localStorage.removeItem("genmypass_vault_file_id");
         localStorage.removeItem("ert");
+        localStorage.removeItem("genmypass_user_email");
       }
+      setDisplayEmail("account@gmail.com");
       useVaultStore.getState().clear();
       lock();
       navigate("/");
+    }
+  };
+
+  const handleDisconnectAndSwitch = () => {
+    if (confirm(t("settings.disconnectAndSwitchConfirm"))) {
+      clearSessionTokens();
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem("genmypass_vault_file_id");
+        localStorage.removeItem("ert");
+        localStorage.removeItem("genmypass_cloud_provider");
+        localStorage.removeItem("genmypass_salt");
+        localStorage.removeItem("genmypass_user_email");
+      }
+      setDisplayEmail("account@gmail.com");
+      useVaultStore.getState().clear();
+      lock();
+      navigate("/connect");
     }
   };
 
@@ -106,7 +142,8 @@ export default function SettingsPage() {
 
     try {
       if (vaultFileId) {
-        await deleteVaultFile(vaultFileId);
+        const provider = getCurrentProvider();
+        if (provider) await provider.deleteVaultFile(vaultFileId);
       }
 
       clearSessionTokens();
@@ -237,7 +274,9 @@ export default function SettingsPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <p className="text-slate-900 dark:text-white font-medium">
-                    {t("settings.googleDrive")}
+                    {currentProvider === "dropbox"
+                      ? t("onboarding.connect.dropbox")
+                      : t("settings.googleDrive")}
                   </p>
                   {isConnected && (
                     <>
@@ -249,12 +288,19 @@ export default function SettingsPage() {
                   )}
                 </div>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">
-                  {userEmail}
+                  {displayEmail}
                 </p>
               </div>
             </div>
             {isConnected && (
-              <div className="shrink-0">
+              <div className="shrink-0 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleDisconnectAndSwitch}
+                  className="px-4 py-2 text-sm font-bold text-primary-500 hover:bg-primary-500/10 dark:hover:bg-primary-500/10 rounded-lg transition-colors"
+                >
+                  {t("settings.disconnectAndSwitch")}
+                </button>
                 <button
                   type="button"
                   onClick={handleDisconnect}

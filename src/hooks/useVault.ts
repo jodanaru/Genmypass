@@ -6,7 +6,7 @@ import {
   useSettingsStore,
 } from "@/stores/settings-store";
 import { useVaultStore, type Vault } from "@/stores/vault-store";
-import { readVaultFile, saveVault } from "@/lib/google-drive";
+import { getCurrentProvider, saveVault } from "@/lib/cloud-storage";
 import { decrypt, encrypt, fromBase64, toBase64 } from "@/lib/crypto";
 
 interface EncryptedVault {
@@ -52,10 +52,16 @@ export function useVault() {
         return;
       }
 
+      const provider = getCurrentProvider();
+      if (!provider) {
+        setError("No hay proveedor de nube configurado.");
+        return;
+      }
+
       setLoading(true);
 
       try {
-        const encryptedContent = await readVaultFile(storedFileId);
+        const encryptedContent = await provider.readVaultFile(storedFileId);
         const encrypted: EncryptedVault = JSON.parse(encryptedContent);
 
         const decrypted = await decrypt({

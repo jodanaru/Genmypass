@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { OnboardingProgress } from "@/components/onboarding";
-import { generatePKCE, initiateOAuthFlow } from "@/lib/google-drive/oauth";
+import {
+  createProvider,
+  setStoredProvider,
+  generatePKCE,
+} from "@/lib/cloud-storage";
 
 function GoogleDriveIcon() {
   return (
@@ -17,7 +21,7 @@ function DropboxIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="w-10 h-10 shrink-0 grayscale opacity-60"
+      className="w-10 h-10 shrink-0"
       fill="#0061FF"
     >
       <path d="M6 2L1 5.2L6 8.4L11 5.2L6 2ZM18 2L13 5.2L18 8.4L23 5.2L18 2ZM1 11.6L6 14.8L11 11.6L6 8.4L1 11.6ZM13 11.6L18 14.8L23 11.6L18 8.4L13 11.6ZM6 15.6L11 18.8L6 22L1 18.8L6 15.6ZM18 15.6L13 18.8L18 22L23 18.8L18 15.6Z" />
@@ -64,6 +68,7 @@ function ArrowForwardIcon() {
 export default function ConnectCloudPage() {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnectingDropbox, setIsConnectingDropbox] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showWhyStorageModal, setShowWhyStorageModal] = useState(false);
 
@@ -71,13 +76,29 @@ export default function ConnectCloudPage() {
     try {
       setError(null);
       setIsConnecting(true);
+      setStoredProvider("google-drive");
       const { verifier } = await generatePKCE();
-      await initiateOAuthFlow(verifier);
-      // La página se redirige a Google, no se ejecuta nada más
+      const provider = createProvider("google-drive");
+      await provider.initiateOAuth(verifier);
     } catch (err) {
       console.error("Error iniciando OAuth:", err);
       setError(t("onboarding.connect.errorDrive"));
       setIsConnecting(false);
+    }
+  };
+
+  const handleDropboxConnect = async () => {
+    try {
+      setError(null);
+      setIsConnectingDropbox(true);
+      setStoredProvider("dropbox");
+      const { verifier } = await generatePKCE();
+      const provider = createProvider("dropbox");
+      await provider.initiateOAuth(verifier);
+    } catch (err) {
+      console.error("Error iniciando OAuth Dropbox:", err);
+      setError(t("onboarding.connect.errorDrive"));
+      setIsConnectingDropbox(false);
     }
   };
 
@@ -209,28 +230,58 @@ export default function ConnectCloudPage() {
               </div>
             </div>
 
-            {/* Dropbox card (disabled) */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-6 rounded-xl opacity-75">
+            {/* Dropbox card */}
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-6 rounded-xl shadow-sm transition-all hover:shadow-md">
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-4 min-w-0">
                   <div className="w-12 h-12 flex items-center justify-center shrink-0">
                     <DropboxIcon />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-slate-600 dark:text-slate-400 text-lg">
+                    <h3 className="font-semibold text-slate-900 dark:text-white text-lg">
                       {t("onboarding.connect.dropbox")}
                     </h3>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase mt-1">
-                      {t("onboarding.connect.comingSoon")}
-                    </span>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">
+                      {t("onboarding.connect.freeStorage")}
+                    </p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  disabled
-                  className="bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 px-6 py-2.5 rounded-lg font-semibold cursor-not-allowed shrink-0"
+                  onClick={handleDropboxConnect}
+                  disabled={isConnectingDropbox}
+                  className="bg-primary-500 hover:bg-primary-600 disabled:bg-primary-300 text-white px-6 py-2.5 rounded-lg font-semibold transition-colors flex items-center gap-2 shrink-0"
                 >
-                  {t("onboarding.connect.connect")}
+                  {isConnectingDropbox ? (
+                    <>
+                      <svg
+                        className="animate-spin w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                      </svg>
+                      {t("common.connecting")}
+                    </>
+                  ) : (
+                    <>
+                      {t("onboarding.connect.connect")}
+                      <ArrowForwardIcon />
+                    </>
+                  )}
                 </button>
               </div>
             </div>

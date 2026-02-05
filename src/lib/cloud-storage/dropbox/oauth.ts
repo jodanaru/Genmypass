@@ -1,21 +1,20 @@
 /**
- * OAuth 2.0 con PKCE para Google Drive (SPA, sin client_secret).
- * Scope: drive.appdata.
+ * Dropbox OAuth 2.0 con PKCE.
+ * Docs: https://www.dropbox.com/developers/documentation/http/documentation#oauth2-authorize
  */
+import { toBase64 } from "@/lib/crypto/utils";
+import { generateState } from "../pkce.js";
+import type { OAuthResult, TokenResponse } from "../types.js";
 
-import { randomBytes, toBase64 } from "@/lib/crypto/utils";
-import type {
-  AuthCode,
-  CodeChallenge,
-  CodeVerifier,
-  GoogleTokenResponse,
-  OAuthCallbackResult,
-  PKCEPair,
-  State,
-} from "./types.js";
+const DROPBOX_AUTH_URL = "https://www.dropbox.com/oauth2/authorize";
 
-const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
-const SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+const STORAGE_VERIFIER = "dropbox_oauth_verifier";
+const STORAGE_STATE = "dropbox_oauth_state";
+
+export const OAUTH_CALLBACK_PATH = "/auth/callback";
+
+const SCOPES =
+  "files.content.write files.content.read account_info.read";
 
 function getOAuthProxyBase(): string {
   return (
@@ -24,52 +23,21 @@ function getOAuthProxyBase(): string {
   );
 }
 
-/** Longitud del code_verifier en bytes (RFC 7636: 43–128 caracteres; 32 bytes → 43 chars base64url). */
-const CODE_VERIFIER_BYTES = 32;
-
-/** Claves en sessionStorage. */
-const STORAGE_VERIFIER = "google_oauth_code_verifier";
-const STORAGE_STATE = "google_oauth_state";
-
-/** Ruta del callback en la app (debe coincidir con la configurada en Google Cloud Console). */
-export const OAUTH_CALLBACK_PATH = "/auth/callback";
-
-function getClientId(): string {
-  const id = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  if (!id || typeof id !== "string") {
-    throw new Error("VITE_GOOGLE_CLIENT_ID no está definida");
-  }
-  return id;
-}
-
-/**
- * Genera code_verifier y code_challenge (S256) para PKCE.
- */
-export async function generatePKCE(): Promise<PKCEPair> {
-  const verifierBytes = randomBytes(CODE_VERIFIER_BYTES);
-  const verifier: CodeVerifier = toBase64(verifierBytes);
-  const challenge: CodeChallenge = await computeCodeChallenge(verifier);
-  return { verifier, challenge };
-}
-
-async function computeCodeChallenge(verifier: CodeVerifier): Promise<CodeChallenge> {
+async function computeCodeChallenge(verifier: string): Promise<string> {
   const data = new TextEncoder().encode(verifier);
   const hash = await crypto.subtle.digest("SHA-256", data);
   return toBase64(new Uint8Array(hash));
 }
 
-/**
- * Genera un state aleatorio para CSRF.
- */
-function generateState(): State {
-  return toBase64(randomBytes(24));
+function getClientId(): string {
+  const id = import.meta.env.VITE_DROPBOX_CLIENT_ID;
+  if (!id || typeof id !== "string") {
+    throw new Error("VITE_DROPBOX_CLIENT_ID no está definida");
+  }
+  return id;
 }
 
-/**
- * Redirige al usuario a Google OAuth con PKCE.
- * Guarda code_verifier y state en sessionStorage para el callback.
- */
-export async function initiateOAuthFlow(verifier: CodeVerifier): Promise<void> {
+export async function initiateDropboxOAuth(verifier: string): Promise<void> {
   const clientId = getClientId();
   const challenge = await computeCodeChallenge(verifier);
   const state = generateState();
@@ -78,27 +46,24 @@ export async function initiateOAuthFlow(verifier: CodeVerifier): Promise<void> {
   sessionStorage.setItem(STORAGE_STATE, state);
 
   const redirectUri = `${window.location.origin}${OAUTH_CALLBACK_PATH}`;
+
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: SCOPE,
     code_challenge: challenge,
     code_challenge_method: "S256",
     state,
+    token_access_type: "offline",
+    scope: SCOPES,
   });
 
-  window.location.href = `${GOOGLE_AUTH_URL}?${params.toString()}`;
+  window.location.href = `${DROPBOX_AUTH_URL}?${params.toString()}`;
 }
 
-/**
- * Procesa el callback de Google: lee code y state de la URL,
- * recupera el code_verifier de sessionStorage, intercambia code por tokens
- * y limpia sessionStorage.
- */
-export async function handleOAuthCallback(): Promise<OAuthCallbackResult> {
+export async function handleDropboxCallback(): Promise<OAuthResult> {
   const params = new URLSearchParams(window.location.search);
-  const code: AuthCode | null = params.get("code");
+  const code = params.get("code");
   const stateFromUrl = params.get("state");
   const error = params.get("error");
   const errorDescription = params.get("error_description");
@@ -136,13 +101,13 @@ export async function handleOAuthCallback(): Promise<OAuthCallbackResult> {
     return {
       success: false,
       error: "missing_code",
-      errorDescription: "Google no devolvió un código de autorización",
+      errorDescription: "Dropbox no devolvió un código de autorización",
     };
   }
 
   const redirectUri = `${window.location.origin}${OAUTH_CALLBACK_PATH}`;
 
-  const response = await fetch(`${getOAuthProxyBase()}/api/auth/token`, {
+  const response = await fetch(`${getOAuthProxyBase()}/api/auth/dropbox/token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -166,8 +131,8 @@ export async function handleOAuthCallback(): Promise<OAuthCallbackResult> {
     };
   }
 
-  const tokens = data as GoogleTokenResponse;
-  if (!tokens.access_token || tokens.token_type !== "Bearer") {
+  const tokens = data as TokenResponse;
+  if (!tokens.access_token) {
     return {
       success: false,
       error: "invalid_response",

@@ -1,8 +1,11 @@
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 
 interface Env {
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
+  DROPBOX_CLIENT_ID: string;
+  DROPBOX_CLIENT_SECRET: string;
 }
 
 function corsHeaders(origin: string) {
@@ -121,6 +124,119 @@ export default {
 
         // Google devuelve access_token, expires_in, token_type (no incluye refresh_token de nuevo)
         return new Response(JSON.stringify(data), {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders(origin) },
+        });
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ error: "internal_error", message: "Error en el servidor" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+        );
+      }
+    }
+
+    // POST /api/auth/dropbox/token - Intercambiar code por tokens (Dropbox)
+    // Dropbox recomienda/acepta Basic Auth (app key : app secret) para evitar invalid_client
+    if (url.pathname === "/api/auth/dropbox/token" && request.method === "POST") {
+      try {
+        const body = await request.json() as {
+          code?: string;
+          code_verifier?: string;
+          redirect_uri?: string;
+        };
+
+        if (!body.code || !body.code_verifier || !body.redirect_uri) {
+          return new Response(
+            JSON.stringify({ error: "missing_params", message: "Faltan code, code_verifier o redirect_uri" }),
+            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+          );
+        }
+
+        const dropboxBasicAuth = btoa(`${env.DROPBOX_CLIENT_ID}:${env.DROPBOX_CLIENT_SECRET}`);
+
+        const tokenBody = new URLSearchParams({
+          code: body.code,
+          code_verifier: body.code_verifier,
+          grant_type: "authorization_code",
+          redirect_uri: body.redirect_uri,
+        });
+
+        const response = await fetch(DROPBOX_TOKEN_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": `Basic ${dropboxBasicAuth}`,
+          },
+          body: tokenBody.toString(),
+        });
+
+        const text = await response.text();
+        const data = text ? (JSON.parse(text) as { error?: string; error_description?: string }) : {};
+
+        if (!response.ok) {
+          return new Response(
+            JSON.stringify({
+              error: data.error || "token_request_failed",
+              error_description: data.error_description,
+            }),
+            { status: response.status, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+          );
+        }
+
+        return new Response(text, {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders(origin) },
+        });
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ error: "internal_error", message: "Error en el servidor" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+        );
+      }
+    }
+
+    // POST /api/auth/dropbox/refresh - Renovar access token (Dropbox)
+    if (url.pathname === "/api/auth/dropbox/refresh" && request.method === "POST") {
+      try {
+        const body = await request.json() as { refresh_token?: string };
+
+        if (!body.refresh_token) {
+          return new Response(
+            JSON.stringify({ error: "missing_params", message: "Falta refresh_token" }),
+            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+          );
+        }
+
+        const dropboxBasicAuth = btoa(`${env.DROPBOX_CLIENT_ID}:${env.DROPBOX_CLIENT_SECRET}`);
+
+        const tokenBody = new URLSearchParams({
+          refresh_token: body.refresh_token,
+          grant_type: "refresh_token",
+        });
+
+        const response = await fetch(DROPBOX_TOKEN_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": `Basic ${dropboxBasicAuth}`,
+          },
+          body: tokenBody.toString(),
+        });
+
+        const text = await response.text();
+        const data = text ? (JSON.parse(text) as { error?: string; error_description?: string }) : {};
+
+        if (!response.ok) {
+          return new Response(
+            JSON.stringify({
+              error: data.error || "refresh_failed",
+              error_description: data.error_description,
+            }),
+            { status: response.status, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+          );
+        }
+
+        return new Response(text, {
           status: 200,
           headers: { "Content-Type": "application/json", ...corsHeaders(origin) },
         });

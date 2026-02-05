@@ -45,6 +45,7 @@
       "setupAccount": "¡Conexión exitosa! Configurando tu cuenta...",
       "errorAuth": "Error procesando autenticación",
       "connectingDrive": "Conectando con Google Drive",
+      "connectingDropbox": "Conectando con Dropbox",
       "successTitle": "¡Conexión exitosa!",
       "errorTitle": "Error de conexión"
     },
@@ -281,7 +282,9 @@
     "googleDrive": "Google Drive",
     "connected": "Conectado",
     "disconnect": "Desconectar",
-    "disconnectConfirm": "¿Seguro que quieres desconectar Google Drive? Tendrás que volver a conectar para acceder a tu bóveda.",
+    "disconnectConfirm": "¿Seguro que quieres desconectar? Tendrás que volver a conectar para acceder a tu bóveda.",
+    "disconnectAndSwitch": "Desconectar y cambiar",
+    "disconnectAndSwitchConfirm": "Se cerrará la sesión del proveedor actual y volverás a la pantalla de conexión. Podrás elegir otro proveedor (Google Drive o Dropbox). Si ya tienes una bóveda allí, podrás desbloquearla; si no, crear una nueva.",
     "securityAudit": "Auditoría de seguridad",
     "checkBreached": "Comprobar contraseñas filtradas",
     "scanBreaches": "Escaneo contra filtraciones de datos conocidas",

@@ -16,7 +16,7 @@ import {
   storeRefreshToken,
   saveVault,
   getAccessToken,
-} from "@/lib/google-drive";
+} from "@/lib/cloud-storage";
 import { DEFAULT_USER_SETTINGS } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { checkPasswordBreach } from "@/lib/hibp";
@@ -151,7 +151,7 @@ export default function SetupPasswordPage() {
       });
 
       if (!getAccessToken()) {
-        throw new Error("No hay sesión de Google Drive activa");
+        throw new Error("No hay sesión de nube activa");
       }
 
       const fileId = await saveVault(encryptedVault);
