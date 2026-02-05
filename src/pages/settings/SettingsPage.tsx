@@ -15,17 +15,20 @@ import {
   Download,
   Trash2,
   Folder,
+  Loader2,
 } from "lucide-react";
 import { useSettingsStore, type AutoLockTime } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useVaultStore } from "@/stores/vault-store";
-import { clearSessionTokens } from "@/lib/google-drive";
+import { clearSessionTokens, deleteVaultFile } from "@/lib/google-drive";
 import { formatRelative } from "@/lib/format-relative";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const lock = useAuthStore((s) => s.lock);
 
@@ -76,17 +79,50 @@ export default function SettingsPage() {
     }
   };
 
-  const handleDeleteVault = () => {
+  const handleDeleteVault = async () => {
     if (deleteConfirmText !== "DELETE") return;
 
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    const vaultFileId =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("genmypass_vault_file_id")
+        : null;
+
+    try {
+      if (vaultFileId) {
+        await deleteVaultFile(vaultFileId);
+      }
+
+      clearSessionTokens();
+      if (typeof localStorage !== "undefined") localStorage.clear();
+      if (typeof sessionStorage !== "undefined") sessionStorage.clear();
+      useVaultStore.getState().clear();
+      lock();
+      setShowDeleteConfirm(false);
+      setDeleteConfirmText("");
+      navigate("/");
+    } catch (err) {
+      console.error("Error deleting vault:", err);
+      setDeleteError(
+        "Could not delete from Google Drive. Delete local data only?"
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteLocalOnly = () => {
     clearSessionTokens();
     if (typeof localStorage !== "undefined") localStorage.clear();
     if (typeof sessionStorage !== "undefined") sessionStorage.clear();
     useVaultStore.getState().clear();
     lock();
-    navigate("/");
     setShowDeleteConfirm(false);
     setDeleteConfirmText("");
+    setDeleteError(null);
+    navigate("/");
   };
 
   const showComingSoon = () => {
@@ -501,7 +537,10 @@ export default function SettingsPage() {
         <div className="pt-4 flex justify-center">
           <button
             type="button"
-            onClick={() => setShowDeleteConfirm(true)}
+            onClick={() => {
+              setShowDeleteConfirm(true);
+              setDeleteError(null);
+            }}
             className="text-red-500 text-sm font-bold opacity-70 hover:opacity-100 transition-opacity flex items-center gap-2"
           >
             <Trash2 className="w-4 h-4" />
@@ -543,12 +582,28 @@ export default function SettingsPage() {
               />
             </div>
 
+            {deleteError && (
+              <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                <p className="text-red-600 dark:text-red-400 text-sm mb-2">
+                  {deleteError}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleDeleteLocalOnly}
+                  className="text-red-500 text-sm underline hover:no-underline"
+                >
+                  Delete local data only
+                </button>
+              </div>
+            )}
+
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => {
                   setShowDeleteConfirm(false);
                   setDeleteConfirmText("");
+                  setDeleteError(null);
                 }}
                 className="flex-1 px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
@@ -557,14 +612,21 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={handleDeleteVault}
-                disabled={deleteConfirmText !== "DELETE"}
+                disabled={deleteConfirmText !== "DELETE" || isDeleting}
                 className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-colors ${
-                  deleteConfirmText === "DELETE"
+                  deleteConfirmText === "DELETE" && !isDeleting
                     ? "bg-red-500 text-white hover:bg-red-600"
                     : "bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed"
-                }`}
+                } ${isDeleting ? "opacity-50 cursor-wait" : ""}`}
               >
-                Delete Forever
+                {isDeleting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Deleting...
+                  </span>
+                ) : (
+                  "Delete Forever"
+                )}
               </button>
             </div>
           </div>
