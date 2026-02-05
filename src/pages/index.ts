@@ -19,6 +19,8 @@ export { default as SettingsPage } from "./settings/SettingsPage";
 export { default as ChangePasswordPage } from "./settings/ChangePasswordPage";
 export { default as FoldersPage } from "./settings/FoldersPage";
 export { default as SecurityAuditPage } from "./settings/SecurityAuditPage";
+export { default as ExportPage } from "./settings/ExportPage";
+export { default as ImportPage } from "./settings/ImportPage";
 
 // Special
 export { default as LockScreenPage } from "./special/LockScreenPage";

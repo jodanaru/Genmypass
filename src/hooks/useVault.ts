@@ -22,7 +22,6 @@ export function useVault() {
   const isUnlocked = useAuthStore((s) => s.isUnlocked);
 
   const vault = useVaultStore((s) => s.vault);
-  const fileId = useVaultStore((s) => s.fileId);
   const isLoading = useVaultStore((s) => s.isLoading);
   const error = useVaultStore((s) => s.error);
   const setVault = useVaultStore((s) => s.setVault);

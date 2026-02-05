@@ -125,10 +125,6 @@ export default function SettingsPage() {
     navigate("/");
   };
 
-  const showComingSoon = () => {
-    alert("This feature will be available soon");
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Header */}
@@ -362,7 +358,7 @@ export default function SettingsPage() {
             <div className="flex gap-3 shrink-0">
               <button
                 type="button"
-                onClick={showComingSoon}
+                onClick={() => navigate("/settings/import")}
                 className="px-4 py-2 rounded-lg bg-primary-500 text-white text-sm font-bold hover:bg-primary-600 transition-colors flex items-center gap-2"
               >
                 <Upload className="w-4 h-4" />
@@ -370,7 +366,7 @@ export default function SettingsPage() {
               </button>
               <button
                 type="button"
-                onClick={showComingSoon}
+                onClick={() => navigate("/settings/export")}
                 className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />

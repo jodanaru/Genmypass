@@ -25,7 +25,9 @@ export default function FoldersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingFolder, setEditingFolder] = useState<FolderType | null>(null);
   const [name, setName] = useState("");
-  const [color, setColor] = useState(CATEGORY_COLORS[0].value);
+  const [color, setColor] = useState<
+    (typeof CATEGORY_COLORS)[number]["value"]
+  >(CATEGORY_COLORS[0].value);
   const [nameError, setNameError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -40,7 +42,11 @@ export default function FoldersPage() {
   const openEditModal = (folder: FolderType) => {
     setEditingFolder(folder);
     setName(folder.name);
-    setColor(folder.color ?? CATEGORY_COLORS[0].value);
+    const colorValue: (typeof CATEGORY_COLORS)[number]["value"] =
+      CATEGORY_COLORS.some((c) => c.value === folder.color)
+        ? (folder.color as (typeof CATEGORY_COLORS)[number]["value"])
+        : CATEGORY_COLORS[0].value;
+    setColor(colorValue);
     setNameError("");
     setModalOpen(true);
   };

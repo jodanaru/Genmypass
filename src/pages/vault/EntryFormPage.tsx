@@ -24,7 +24,6 @@ import {
   LENGTH_MAX,
   LENGTH_MIN,
   type GeneratePasswordOptions,
-  type PasswordStrength,
 } from "@/lib/password-generator";
 import { checkPasswordBreach } from "@/lib/hibp";
 import { BreachWarning } from "@/components/vault";

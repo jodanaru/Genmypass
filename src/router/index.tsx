@@ -16,6 +16,8 @@ import {
   ChangePasswordPage,
   FoldersPage,
   SecurityAuditPage,
+  ExportPage,
+  ImportPage,
   LockScreenPage,
   OfflinePage,
   ErrorPage,
@@ -51,6 +53,8 @@ export const router = createBrowserRouter([
       { path: "settings/password", element: <ChangePasswordPage /> },
       { path: "settings/folders", element: <FoldersPage /> },
       { path: "settings/security-audit", element: <SecurityAuditPage /> },
+      { path: "settings/export", element: <ExportPage /> },
+      { path: "settings/import", element: <ImportPage /> },
     ],
   },
 
