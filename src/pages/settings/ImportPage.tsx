@@ -20,6 +20,7 @@ import {
   importFrom1Password,
   type ImportResult,
 } from "@/lib/import";
+import { useVault } from "@/hooks/useVault";
 import { useVaultStore, type Vault } from "@/stores/vault-store";
 import { useSettingsStore } from "@/stores/settings-store";
 
@@ -36,6 +37,7 @@ type ImportMode = "merge" | "replace";
 export default function ImportPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { save } = useVault();
   const fileId = useVaultStore((s) => s.fileId);
   const vaultFileSalt = useVaultStore((s) => s.vaultFileSalt);
   const setVault = useVaultStore((s) => s.setVault);
@@ -55,6 +57,8 @@ export default function ImportPage() {
   const [importProgress, setImportProgress] = useState<string | null>(null);
   const [importDone, setImportDone] = useState<ImportResult | null>(null);
   const [backupForUndo, setBackupForUndo] = useState<Vault | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   const handleFile = useCallback(
     async (selectedFile: File | null) => {
@@ -63,6 +67,7 @@ export default function ImportPage() {
       setFormat(null);
       setImportError(null);
       setImportDone(null);
+      setSaveError(null);
 
       if (!selectedFile) return;
 
@@ -136,6 +141,7 @@ export default function ImportPage() {
     setImportProgress(t("settings.importPage.importing"));
     setIsImporting(true);
     setImportDone(null);
+    setSaveError(null);
 
     const currentVault = useVaultStore.getState().vault;
     const currentFileId = useVaultStore.getState().fileId;
@@ -146,8 +152,8 @@ export default function ImportPage() {
     }
 
     try {
-    if (mode === "replace" && currentVault && currentFileId) {
-      const now = new Date().toISOString();
+      if (mode === "replace" && currentVault && currentFileId) {
+        const now = new Date().toISOString();
         const newVault: Vault = {
           version: 1,
           entries,
@@ -180,18 +186,36 @@ export default function ImportPage() {
       setPreview(null);
       setFile(null);
       setFormat(null);
+
+      if (useVaultStore.getState().fileId) {
+        setImportProgress(t("settings.importPage.savingToCloud"));
+        try {
+          await save();
+        } catch {
+          setSaveError(t("settings.importPage.saveAfterImportError"));
+        }
+      }
     } finally {
       setImportProgress(null);
       setIsImporting(false);
     }
-  }, [preview, mode, setVault, addFolder, addEntry, setSettingsFromVault, t]);
+  }, [preview, mode, save, setVault, addFolder, addEntry, setSettingsFromVault, t]);
 
-  const handleUndo = useCallback(() => {
+  const handleUndo = useCallback(async () => {
     if (!backupForUndo || !fileId) return;
     setVault(backupForUndo, fileId, vaultFileSalt ?? undefined);
-    setBackupForUndo(null);
-    setImportDone(null);
-  }, [backupForUndo, fileId, vaultFileSalt, setVault]);
+    setSaveError(null);
+    setIsRestoring(true);
+    try {
+      await save();
+      setBackupForUndo(null);
+      setImportDone(null);
+    } catch {
+      setSaveError(t("settings.importPage.saveAfterRestoreError"));
+    } finally {
+      setIsRestoring(false);
+    }
+  }, [backupForUndo, fileId, vaultFileSalt, save, setVault, t]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -375,13 +399,24 @@ export default function ImportPage() {
                   ))}
                 </ul>
               )}
+              {saveError && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm mt-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  {saveError}
+                </div>
+              )}
               {backupForUndo && (
                 <button
                   type="button"
                   onClick={handleUndo}
-                  className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700"
+                  disabled={isRestoring}
+                  className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
                 >
-                  <Undo2 className="w-4 h-4" />
+                  {isRestoring ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Undo2 className="w-4 h-4" />
+                  )}
                   {t("settings.importPage.undoRestore")}
                 </button>
               )}
