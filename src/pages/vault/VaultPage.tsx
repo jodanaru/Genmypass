@@ -8,6 +8,11 @@ import {
   ShieldCheck,
   AlertTriangle,
 } from "lucide-react";
+import {
+  classifyApiError,
+  getApiErrorMessageKey,
+  type ApiErrorClassification,
+} from "@/lib/api-errors";
 import { PasswordCard, FolderChips } from "@/components/vault";
 import { useVault } from "@/hooks/useVault";
 import { useClipboard } from "@/hooks/useClipboard";
@@ -34,9 +39,19 @@ export default function VaultPage() {
   const { t } = useTranslation();
   const formatRelative = useFormatRelative();
   const navigate = useNavigate();
-  const { entries, folders, isLoading, error, save } = useVault();
+  const {
+    entries,
+    folders,
+    isLoading,
+    errorClassification,
+    retryLoad,
+    save,
+  } = useVault();
+  const error = useVaultStore((s) => s.error);
   const { copy } = useClipboard();
   const toggleFavorite = useVaultStore((s) => s.toggleFavorite);
+  const [saveErrorClassification, setSaveErrorClassification] =
+    useState<ApiErrorClassification | null>(null);
 
   const folderChips = useMemo(() => {
     const allChip = { id: "", name: t("vault.all") };
@@ -98,12 +113,19 @@ export default function VaultPage() {
     navigate("/lock");
   };
 
+  const [lastFavoriteEntryId, setLastFavoriteEntryId] = useState<string | null>(
+    null
+  );
+
   const handleFavoriteClick = async (entryId: string) => {
     toggleFavorite(entryId);
+    setSaveErrorClassification(null);
+    setLastFavoriteEntryId(entryId);
     try {
       await save();
     } catch (err) {
       console.error("Error saving favorite:", err);
+      setSaveErrorClassification(classifyApiError(err));
     }
   };
 
@@ -139,7 +161,16 @@ export default function VaultPage() {
     );
   }
 
-  if (error) {
+  const hasError = error || errorClassification;
+  if (hasError) {
+    const message = errorClassification
+      ? t(getApiErrorMessageKey(errorClassification.type))
+      : error ?? t("errors.unknown");
+    const showRetry = errorClassification?.retryable === true;
+    const showReconnect =
+      !showRetry ||
+      errorClassification?.type === "session_expired";
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4">
         <div className="text-center">
@@ -150,14 +181,27 @@ export default function VaultPage() {
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
             {t("errors.title")}
           </h2>
-          <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
-          <button
-            type="button"
-            onClick={() => navigate("/connect")}
-            className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-lg transition-colors"
-          >
-            {t("vault.reconnect")}
-          </button>
+          <p className="text-red-500 dark:text-red-400 mb-4">{message}</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {showRetry && (
+              <button
+                type="button"
+                onClick={retryLoad}
+                className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                {t("common.retry")}
+              </button>
+            )}
+            {showReconnect && (
+              <button
+                type="button"
+                onClick={() => navigate("/connect")}
+                className="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                {t("vault.reconnect")}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -186,6 +230,32 @@ export default function VaultPage() {
           </button>
         </div>
       </header>
+
+      {saveErrorClassification && (
+        <div
+          role="alert"
+          className="mx-4 mt-4 max-w-2xl mx-auto text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 px-4 py-3 rounded-xl flex flex-col gap-2"
+        >
+          <p>{t(getApiErrorMessageKey(saveErrorClassification.type))}</p>
+          {saveErrorClassification.retryable && lastFavoriteEntryId && (
+            <button
+              type="button"
+              onClick={async () => {
+                setSaveErrorClassification(null);
+                try {
+                  await save();
+                  setLastFavoriteEntryId(null);
+                } catch (err) {
+                  setSaveErrorClassification(classifyApiError(err));
+                }
+              }}
+              className="text-left font-semibold underline hover:no-underline"
+            >
+              {t("common.retry")}
+            </button>
+          )}
+        </div>
+      )}
 
       <main className="px-4 py-6 max-w-2xl mx-auto">
         {/* Search bar */}

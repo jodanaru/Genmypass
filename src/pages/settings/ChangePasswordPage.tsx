@@ -11,6 +11,11 @@ import {
   Lock,
 } from "lucide-react";
 import {
+  classifyApiError,
+  getApiErrorMessageKey,
+  type ApiErrorClassification,
+} from "@/lib/api-errors";
+import {
   initSodium,
   deriveKey,
   deriveKeyWithNewSalt,
@@ -49,6 +54,8 @@ export default function ChangePasswordPage() {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveErrorClassification, setSaveErrorClassification] =
+    useState<ApiErrorClassification | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isReEncrypting, setIsReEncrypting] = useState(false);
   const currentPasswordRef = useRef<HTMLInputElement>(null);
@@ -125,16 +132,19 @@ export default function ChangePasswordPage() {
         : null);
 
     if (!currentVault || !currentFileId) {
+      setSaveErrorClassification(null);
       setError(t("settings.changePassword.errorVaultNotFound"));
       return;
     }
     if (!salt) {
+      setSaveErrorClassification(null);
       setError(t("settings.changePassword.errorNoConfig"));
       return;
     }
 
     setIsProcessing(true);
     setError(null);
+    setSaveErrorClassification(null);
 
     try {
       await initSodium();
@@ -143,6 +153,7 @@ export default function ChangePasswordPage() {
         fromBase64(salt)
       );
       if (!timingSafeEqual(derivedKey, masterKey)) {
+        setSaveErrorClassification(null);
         setError(t("settings.changePassword.errorWrongPassword"));
         return;
       }
@@ -199,11 +210,8 @@ export default function ChangePasswordPage() {
       navigate("/settings", { replace: true });
     } catch (err) {
       console.error("Change password error:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : t("settings.changePassword.errorSave")
-      );
+      setSaveErrorClassification(classifyApiError(err));
+      setError(null);
     } finally {
       setIsProcessing(false);
       setIsReEncrypting(false);
@@ -264,9 +272,25 @@ export default function ChangePasswordPage() {
 
         {/* Form Card */}
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-8 shadow-sm space-y-6">
-          {error && (
-            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-              <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+          {(error || saveErrorClassification) && (
+            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex flex-col gap-2">
+              <p className="text-red-700 dark:text-red-400 text-sm">
+                {saveErrorClassification
+                  ? t(getApiErrorMessageKey(saveErrorClassification.type))
+                  : error}
+              </p>
+              {saveErrorClassification?.retryable && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSaveErrorClassification(null);
+                    void handleSubmit();
+                  }}
+                  className="text-left font-semibold underline hover:no-underline text-red-700 dark:text-red-400"
+                >
+                  {t("common.retry")}
+                </button>
+              )}
             </div>
           )}
 
@@ -287,6 +311,7 @@ export default function ChangePasswordPage() {
                 onChange={(e) => {
                   setCurrentPassword(e.target.value);
                   setError(null);
+                  setSaveErrorClassification(null);
                 }}
                 autoComplete="current-password"
                 placeholder={t("settings.changePassword.placeholderCurrent")}

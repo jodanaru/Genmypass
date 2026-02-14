@@ -9,6 +9,11 @@ import {
   CheckCircle,
   Circle,
 } from "lucide-react";
+import {
+  classifyApiError,
+  getApiErrorMessageKey,
+  type ApiErrorClassification,
+} from "@/lib/api-errors";
 import { OnboardingProgress } from "@/components/onboarding";
 import { initSodium, deriveKeyWithNewSalt, encrypt, toBase64 } from "@/lib/crypto";
 import {
@@ -43,6 +48,8 @@ export default function SetupPasswordPage() {
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveErrorClassification, setSaveErrorClassification] =
+    useState<ApiErrorClassification | null>(null);
   const [breachResult, setBreachResult] = useState<{
     breached: boolean;
     count: number;
@@ -111,6 +118,7 @@ export default function SetupPasswordPage() {
 
     setIsProcessing(true);
     setError(null);
+    setSaveErrorClassification(null);
 
     try {
       await initSodium();
@@ -162,11 +170,8 @@ export default function SetupPasswordPage() {
       navigate("/setup/security");
     } catch (err) {
       console.error("Error en setup:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : t("onboarding.password.errorSetup")
-      );
+      setSaveErrorClassification(classifyApiError(err));
+      setError(null);
     } finally {
       setIsProcessing(false);
     }
@@ -204,12 +209,28 @@ export default function SetupPasswordPage() {
             </p>
           </div>
 
-          {error && (
-            <div className="mb-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+          {(error || saveErrorClassification) && (
+            <div className="mb-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex flex-col gap-2">
               <div className="flex items-center gap-3 text-red-700 dark:text-red-400">
                 <AlertTriangle className="w-5 h-5 shrink-0" />
-                <span className="text-sm">{error}</span>
+                <span className="text-sm">
+                  {saveErrorClassification
+                    ? t(getApiErrorMessageKey(saveErrorClassification.type))
+                    : error}
+                </span>
               </div>
+              {saveErrorClassification?.retryable && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSaveErrorClassification(null);
+                    void handleContinue();
+                  }}
+                  className="text-left font-semibold underline hover:no-underline text-red-700 dark:text-red-400 text-sm"
+                >
+                  {t("common.retry")}
+                </button>
+              )}
             </div>
           )}
 

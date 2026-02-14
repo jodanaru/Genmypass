@@ -1,3 +1,4 @@
+import { OAuthProxyError } from "@/lib/api-errors";
 import type {
   CloudFile,
   CloudProvider,
@@ -41,9 +42,9 @@ export class GoogleDriveProvider implements CloudStorageProvider {
         error?: string;
         message?: string;
       };
-      throw new Error(
-        err.error ?? err.message ?? `Refresh failed: ${response.status}`
-      );
+      const message =
+        err.error ?? err.message ?? `Refresh failed: ${response.status}`;
+      throw new OAuthProxyError(message, response.status);
     }
     const data = (await response.json()) as TokenResponse;
     if (!data.access_token || data.token_type !== "Bearer") {

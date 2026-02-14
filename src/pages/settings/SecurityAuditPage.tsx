@@ -11,6 +11,11 @@ import {
   ChevronDown,
   X,
 } from "lucide-react";
+import {
+  classifyApiError,
+  getApiErrorMessageKey,
+  type ApiErrorClassification,
+} from "@/lib/api-errors";
 import { useVault } from "@/hooks/useVault";
 import { useSettingsStore } from "@/stores/settings-store";
 import { checkPasswordBreach } from "@/lib/hibp";
@@ -40,6 +45,8 @@ export default function SecurityAuditPage() {
   const [status, setStatus] = useState<AuditStatus>("idle");
   const [progress, setProgress] = useState<AuditProgress | null>(null);
   const [auditResults, setAuditResults] = useState<AuditResult[]>([]);
+  const [auditApiError, setAuditApiError] =
+    useState<ApiErrorClassification | null>(null);
   const [secureSectionCollapsed, setSecureSectionCollapsed] = useState(true);
   const cancelledRef = useRef(false);
 
@@ -48,8 +55,10 @@ export default function SecurityAuditPage() {
   const runAudit = useCallback(async () => {
     if (entriesWithPassword.length === 0) return;
     setStatus("scanning");
+    setAuditApiError(null);
     cancelledRef.current = false;
     const results: AuditResult[] = [];
+    let lastErrorClassification: ApiErrorClassification | null = null;
 
     for (let i = 0; i < entriesWithPassword.length; i++) {
       if (cancelledRef.current) break;
@@ -62,10 +71,14 @@ export default function SecurityAuditPage() {
         breached: result.breached,
         count: result.count,
       });
+      if (result.error) {
+        lastErrorClassification = classifyApiError(null, result.status);
+      }
       await new Promise((r) => setTimeout(r, RATE_LIMIT_MS));
     }
 
     setAuditResults(results);
+    setAuditApiError(lastErrorClassification);
     setProgress(null);
     setStatus("results");
     if (!cancelledRef.current) {
@@ -80,6 +93,7 @@ export default function SecurityAuditPage() {
   const handleScanAgain = () => {
     setStatus("idle");
     setAuditResults([]);
+    setAuditApiError(null);
   };
 
   const compromised = auditResults.filter((r) => r.breached);
@@ -190,6 +204,25 @@ export default function SecurityAuditPage() {
 
         {status === "results" && (
           <>
+            {auditApiError && (
+              <section
+                role="alert"
+                className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3 flex flex-col gap-2"
+              >
+                <p className="text-red-600 dark:text-red-400 text-sm">
+                  {t(getApiErrorMessageKey(auditApiError.type))}
+                </p>
+                {auditApiError.retryable && (
+                  <button
+                    type="button"
+                    onClick={() => runAudit()}
+                    className="text-left font-semibold underline hover:no-underline text-red-600 dark:text-red-400 text-sm"
+                  >
+                    {t("common.retry")}
+                  </button>
+                )}
+              </section>
+            )}
             <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
               <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-wider px-6 pb-2 pt-6 uppercase">
                 {t("settings.audit.results")}

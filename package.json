@@ -6,6 +6,7 @@
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "dev": "vite",
+    "dev:worker": "cd workers/oauth-proxy && pnpm run dev",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest",

@@ -13,6 +13,11 @@ import {
   Trash2,
   Wand2,
 } from "lucide-react";
+import {
+  classifyApiError,
+  getApiErrorMessageKey,
+  type ApiErrorClassification,
+} from "@/lib/api-errors";
 import { useVault } from "@/hooks/useVault";
 import { useClipboard } from "@/hooks/useClipboard";
 import { useVaultStore } from "@/stores/vault-store";
@@ -57,7 +62,11 @@ export default function EntryFormPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [nameError, setNameError] = useState("");
-  const [saveError, setSaveError] = useState("");
+  const [saveErrorClassification, setSaveErrorClassification] =
+    useState<ApiErrorClassification | null>(null);
+  const [lastFailedAction, setLastFailedAction] = useState<
+    "save" | "delete" | null
+  >(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [breachResult, setBreachResult] = useState<{
@@ -107,7 +116,7 @@ export default function EntryFormPage() {
       setFavorite(false);
       setPasswordVisible(false);
       setNameError("");
-      setSaveError("");
+      setSaveErrorClassification(null);
     } else if (entry) {
       setTitle(entry.title);
       setUrl(entry.url ?? "");
@@ -118,7 +127,7 @@ export default function EntryFormPage() {
       setFavorite(entry.favorite ?? false);
       setPasswordVisible(false);
       setNameError("");
-      setSaveError("");
+      setSaveErrorClassification(null);
     }
   }, [isNew, entry, state?.generatedPassword]);
 
@@ -229,7 +238,7 @@ export default function EntryFormPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setNameError("");
-    setSaveError("");
+    setSaveErrorClassification(null);
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
       setNameError(t("entry.nameRequired"));
@@ -266,29 +275,37 @@ export default function EntryFormPage() {
       navigate("/vault");
     } catch (err) {
       console.error("Error saving entry:", err);
-      setSaveError(t("entry.saveError"));
+      setSaveErrorClassification(classifyApiError(err));
+      setLastFailedAction("save");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDelete = useCallback(async () => {
-    if (!id) return;
-    const confirmed = window.confirm(t("entry.deleteConfirm"));
-    if (!confirmed) return;
-    setIsDeleting(true);
-    setSaveError("");
-    try {
-      deleteEntry(id);
-      await save();
-      navigate("/vault");
-    } catch (err) {
-      console.error("Error deleting entry:", err);
-      setSaveError(t("entry.deleteError"));
-    } finally {
-      setIsDeleting(false);
-    }
-  }, [id, deleteEntry, save, navigate]);
+  const handleDelete = useCallback(
+    async (skipConfirm = false) => {
+      if (!id) return;
+      if (!skipConfirm) {
+        const confirmed = window.confirm(t("entry.deleteConfirm"));
+        if (!confirmed) return;
+      }
+      setIsDeleting(true);
+      setSaveErrorClassification(null);
+      setLastFailedAction(null);
+      try {
+        deleteEntry(id);
+        await save();
+        navigate("/vault");
+      } catch (err) {
+        console.error("Error deleting entry:", err);
+        setSaveErrorClassification(classifyApiError(err));
+        setLastFailedAction("delete");
+      } finally {
+        setIsDeleting(false);
+      }
+    },
+    [id, deleteEntry, save, navigate, t]
+  );
 
   const cancelTo = "/vault";
 
@@ -326,7 +343,7 @@ export default function EntryFormPage() {
           {!isNew && id && (
             <button
               type="button"
-              onClick={handleDelete}
+              onClick={() => void handleDelete()}
               disabled={isDeleting}
               className="flex items-center justify-center rounded-lg h-10 w-10 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50 transition-colors"
               aria-label={t("entry.ariaDelete")}
@@ -345,13 +362,32 @@ export default function EntryFormPage() {
             onSubmit={handleSubmit}
             className="flex flex-col gap-6"
           >
-            {saveError && (
-              <p
+            {saveErrorClassification && (
+              <div
                 role="alert"
-                className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 px-4 py-2 rounded-lg"
+                className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 px-4 py-2 rounded-lg flex flex-col gap-2"
               >
-                {saveError}
-              </p>
+                <p>{t(getApiErrorMessageKey(saveErrorClassification.type))}</p>
+                {saveErrorClassification.retryable && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSaveErrorClassification(null);
+                      if (lastFailedAction === "save") {
+                        void handleSubmit({
+                          preventDefault: () => {},
+                        } as React.FormEvent);
+                      } else if (lastFailedAction === "delete" && id) {
+                        void handleDelete(true);
+                      }
+                      setLastFailedAction(null);
+                    }}
+                    className="text-left font-semibold underline hover:no-underline"
+                  >
+                    {t("common.retry")}
+                  </button>
+                )}
+              </div>
             )}
 
             {/* Identity */}

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { ApiErrorClassification } from "@/lib/api-errors";
 import type { UserSettings } from "@/stores/settings-store";
 
 export interface VaultEntry {
@@ -32,14 +33,21 @@ export interface Vault {
 interface VaultState {
   vault: Vault | null;
   isLoading: boolean;
+  /** @deprecated Use errorClassification and t(getApiErrorMessageKey(type)) */
   error: string | null;
+  /** ADR-016: classification for API errors (type + retryable). */
+  errorClassification: ApiErrorClassification | null;
   fileId: string | null;
   /** Salt en base64 del archivo del vault (para reescribir al guardar). */
   vaultFileSalt: string | null;
+  /** Increment to trigger vault load again (for Retry button). */
+  retryLoadTrigger: number;
 
   setVault: (vault: Vault, fileId: string, vaultFileSalt?: string | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setErrorClassification: (c: ApiErrorClassification | null) => void;
+  incrementRetryLoadTrigger: () => void;
 
   addEntry: (entry: VaultEntry) => void;
   updateEntry: (id: string, updates: Partial<VaultEntry>) => void;
@@ -58,13 +66,30 @@ export const useVaultStore = create<VaultState>((set) => ({
   vault: null,
   isLoading: false,
   error: null,
+  errorClassification: null,
   fileId: null,
   vaultFileSalt: null,
+  retryLoadTrigger: 0,
 
   setVault: (vault, fileId, vaultFileSalt = null) =>
-    set({ vault, fileId, vaultFileSalt, error: null }),
+    set({
+      vault,
+      fileId,
+      vaultFileSalt,
+      error: null,
+      errorClassification: null,
+    }),
   setLoading: (isLoading) => set({ isLoading }),
-  setError: (error) => set({ error, isLoading: false }),
+  setError: (error) =>
+    set({ error, errorClassification: null, isLoading: false }),
+  setErrorClassification: (errorClassification) =>
+    set({ errorClassification, error: null, isLoading: false }),
+  incrementRetryLoadTrigger: () =>
+    set((s) => ({
+      retryLoadTrigger: s.retryLoadTrigger + 1,
+      errorClassification: null,
+      error: null,
+    })),
 
   addEntry: (entry) =>
     set((state) => ({
@@ -162,5 +187,11 @@ export const useVaultStore = create<VaultState>((set) => ({
     })),
 
   clear: () =>
-    set({ vault: null, fileId: null, vaultFileSalt: null, error: null }),
+    set({
+      vault: null,
+      fileId: null,
+      vaultFileSalt: null,
+      error: null,
+      errorClassification: null,
+    }),
 }));

@@ -7,7 +7,15 @@
 const API_BASE = "https://api.pwnedpasswords.com/range";
 const FETCH_TIMEOUT_MS = 5000;
 
-const breachCache = new Map<string, { breached: boolean; count: number }>();
+export interface BreachCheckResult {
+  breached: boolean;
+  count: number;
+  /** ADR-016: set when the API request failed (network, 5xx, 429). */
+  error?: true;
+  status?: number;
+}
+
+const breachCache = new Map<string, BreachCheckResult>();
 
 /**
  * Computes SHA-1 hash of a string and returns it as 40-char uppercase hex.
@@ -26,12 +34,12 @@ async function sha1Hex(text: string): Promise<string> {
  * with k-anonymity (only the first 5 chars of the SHA-1 hash are sent).
  *
  * @param password - The password to check (never sent to the server).
- * @returns { breached: true, count } if found in breaches, else { breached: false, count: 0 }.
- *          On network/timeout errors, returns { breached: false, count: 0 } (does not throw).
+ * @returns BreachCheckResult. On network/timeout or !response.ok, returns
+ *          { breached: false, count: 0, error: true, status? } for ADR-016.
  */
 export async function checkPasswordBreach(
   password: string
-): Promise<{ breached: boolean; count: number }> {
+): Promise<BreachCheckResult> {
   if (!password) {
     return { breached: false, count: 0 };
   }
@@ -56,7 +64,12 @@ export async function checkPasswordBreach(
 
     if (!response.ok) {
       console.warn("[HIBP] API returned non-OK:", response.status);
-      return { breached: false, count: 0 };
+      return {
+        breached: false,
+        count: 0,
+        error: true,
+        status: response.status,
+      };
     }
 
     const text = await response.text();
@@ -69,17 +82,17 @@ export async function checkPasswordBreach(
       const countStr = line.slice(colonIndex + 1).trim();
       if (lineSuffix.toUpperCase() === suffix.toUpperCase()) {
         const count = parseInt(countStr, 10) || 0;
-        const result = { breached: true, count };
+        const result: BreachCheckResult = { breached: true, count };
         breachCache.set(password, result);
         return result;
       }
     }
 
-    const result = { breached: false, count: 0 };
+    const result: BreachCheckResult = { breached: false, count: 0 };
     breachCache.set(password, result);
     return result;
   } catch (err) {
     console.warn("[HIBP] Breach check failed:", err);
-    return { breached: false, count: 0 };
+    return { breached: false, count: 0, error: true };
   }
 }

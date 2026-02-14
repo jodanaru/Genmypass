@@ -20,6 +20,11 @@ import {
   importFrom1Password,
   type ImportResult,
 } from "@/lib/import";
+import {
+  classifyApiError,
+  getApiErrorMessageKey,
+  type ApiErrorClassification,
+} from "@/lib/api-errors";
 import { useVault } from "@/hooks/useVault";
 import { useVaultStore, type Vault } from "@/stores/vault-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -57,7 +62,11 @@ export default function ImportPage() {
   const [importProgress, setImportProgress] = useState<string | null>(null);
   const [importDone, setImportDone] = useState<ImportResult | null>(null);
   const [backupForUndo, setBackupForUndo] = useState<Vault | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveErrorClassification, setSaveErrorClassification] =
+    useState<ApiErrorClassification | null>(null);
+  const [lastSaveFailedAction, setLastSaveFailedAction] = useState<
+    "import_save" | "restore" | null
+  >(null);
   const [isRestoring, setIsRestoring] = useState(false);
 
   const handleFile = useCallback(
@@ -67,7 +76,8 @@ export default function ImportPage() {
       setFormat(null);
       setImportError(null);
       setImportDone(null);
-      setSaveError(null);
+      setSaveErrorClassification(null);
+      setLastSaveFailedAction(null);
 
       if (!selectedFile) return;
 
@@ -141,7 +151,8 @@ export default function ImportPage() {
     setImportProgress(t("settings.importPage.importing"));
     setIsImporting(true);
     setImportDone(null);
-    setSaveError(null);
+    setSaveErrorClassification(null);
+    setLastSaveFailedAction(null);
 
     const currentVault = useVaultStore.getState().vault;
     const currentFileId = useVaultStore.getState().fileId;
@@ -191,8 +202,9 @@ export default function ImportPage() {
         setImportProgress(t("settings.importPage.savingToCloud"));
         try {
           await save();
-        } catch {
-          setSaveError(t("settings.importPage.saveAfterImportError"));
+        } catch (err) {
+          setSaveErrorClassification(classifyApiError(err));
+          setLastSaveFailedAction("import_save");
         }
       }
     } finally {
@@ -204,18 +216,20 @@ export default function ImportPage() {
   const handleUndo = useCallback(async () => {
     if (!backupForUndo || !fileId) return;
     setVault(backupForUndo, fileId, vaultFileSalt ?? undefined);
-    setSaveError(null);
+    setSaveErrorClassification(null);
+    setLastSaveFailedAction(null);
     setIsRestoring(true);
     try {
       await save();
       setBackupForUndo(null);
       setImportDone(null);
-    } catch {
-      setSaveError(t("settings.importPage.saveAfterRestoreError"));
+    } catch (err) {
+      setSaveErrorClassification(classifyApiError(err));
+      setLastSaveFailedAction("restore");
     } finally {
       setIsRestoring(false);
     }
-  }, [backupForUndo, fileId, vaultFileSalt, save, setVault, t]);
+  }, [backupForUndo, fileId, vaultFileSalt, save, setVault]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -399,16 +413,37 @@ export default function ImportPage() {
                   ))}
                 </ul>
               )}
-              {saveError && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm mt-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  {saveError}
+              {saveErrorClassification && (
+                <div className="flex flex-col gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm mt-2">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    {t(getApiErrorMessageKey(saveErrorClassification.type))}
+                  </div>
+                  {saveErrorClassification.retryable && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSaveErrorClassification(null);
+                        if (lastSaveFailedAction === "import_save") {
+                          void save().catch((err) => {
+                            setSaveErrorClassification(classifyApiError(err));
+                            setLastSaveFailedAction("import_save");
+                          });
+                        } else if (lastSaveFailedAction === "restore") {
+                          void handleUndo();
+                        }
+                      }}
+                      className="text-left font-semibold underline hover:no-underline"
+                    >
+                      {t("common.retry")}
+                    </button>
+                  )}
                 </div>
               )}
               {backupForUndo && (
                 <button
                   type="button"
-                  onClick={handleUndo}
+                  onClick={() => void handleUndo()}
                   disabled={isRestoring}
                   className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
                 >

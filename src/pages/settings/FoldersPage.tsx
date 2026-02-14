@@ -8,6 +8,11 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import {
+  classifyApiError,
+  getApiErrorMessageKey,
+  type ApiErrorClassification,
+} from "@/lib/api-errors";
 import { useVault } from "@/hooks/useVault";
 import { useVaultStore } from "@/stores/vault-store";
 import type { Folder as FolderType } from "@/stores/vault-store";
@@ -31,6 +36,8 @@ export default function FoldersPage() {
     (typeof CATEGORY_COLORS)[number]["value"]
   >(CATEGORY_COLORS[0].value);
   const [nameError, setNameError] = useState("");
+  const [saveErrorClassification, setSaveErrorClassification] =
+    useState<ApiErrorClassification | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const openCreateModal = () => {
@@ -59,6 +66,7 @@ export default function FoldersPage() {
     setName("");
     setColor(CATEGORY_COLORS[0].value);
     setNameError("");
+    setSaveErrorClassification(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,6 +81,7 @@ export default function FoldersPage() {
       return;
     }
     setIsSaving(true);
+    setSaveErrorClassification(null);
     try {
       if (editingFolder) {
         updateFolder(editingFolder.id, { name: trimmed, color: color || undefined });
@@ -87,11 +96,14 @@ export default function FoldersPage() {
       closeModal();
     } catch (err) {
       console.error("Error saving category:", err);
-      setNameError(t("settings.folders.saveError"));
+      setSaveErrorClassification(classifyApiError(err));
     } finally {
       setIsSaving(false);
     }
   };
+
+  const [deleteErrorClassification, setDeleteErrorClassification] =
+    useState<ApiErrorClassification | null>(null);
 
   const handleDelete = async (folderId: string) => {
     const count = entries.filter((e) => e.folderId === folderId).length;
@@ -100,11 +112,13 @@ export default function FoldersPage() {
         ? t("settings.folders.deleteWithPasswords", { count })
         : t("settings.folders.deleteConfirm");
     if (!window.confirm(msg)) return;
+    setDeleteErrorClassification(null);
     try {
       deleteFolder(folderId);
       await save();
     } catch (err) {
       console.error("Error deleting category:", err);
+      setDeleteErrorClassification(classifyApiError(err));
     }
   };
 
@@ -136,6 +150,14 @@ export default function FoldersPage() {
 
       {/* Content */}
       <main className="max-w-3xl mx-auto py-8 px-6 space-y-6">
+        {deleteErrorClassification && (
+          <div
+            role="alert"
+            className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 px-4 py-3 rounded-xl"
+          >
+            {t(getApiErrorMessageKey(deleteErrorClassification.type))}
+          </div>
+        )}
         <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700">
             <h2 className="text-slate-900 dark:text-white font-semibold">
@@ -227,6 +249,28 @@ export default function FoldersPage() {
               {editingFolder ? t("settings.folders.editCategory") : t("settings.folders.newCategory")}
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {saveErrorClassification && (
+                <div
+                  role="alert"
+                  className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 px-4 py-2 rounded-lg flex flex-col gap-2"
+                >
+                  <p>{t(getApiErrorMessageKey(saveErrorClassification.type))}</p>
+                  {saveErrorClassification.retryable && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSaveErrorClassification(null);
+                        void handleSubmit({
+                          preventDefault: () => {},
+                        } as React.FormEvent);
+                      }}
+                      className="text-left font-semibold underline hover:no-underline"
+                    >
+                      {t("common.retry")}
+                    </button>
+                  )}
+                </div>
+              )}
               <div>
                 <label
                   htmlFor="folder-name"

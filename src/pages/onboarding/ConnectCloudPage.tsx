@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { OnboardingProgress } from "@/components/onboarding";
 import {
+  classifyApiError,
+  getApiErrorMessageKey,
+} from "@/lib/api-errors";
+import {
   createProvider,
   setStoredProvider,
   generatePKCE,
@@ -69,12 +73,14 @@ export default function ConnectCloudPage() {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnectingDropbox, setIsConnectingDropbox] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorClassification, setErrorClassification] = useState<
+    ReturnType<typeof classifyApiError> | null
+  >(null);
   const [showWhyStorageModal, setShowWhyStorageModal] = useState(false);
 
   const handleGoogleDriveConnect = async () => {
     try {
-      setError(null);
+      setErrorClassification(null);
       setIsConnecting(true);
       setStoredProvider("google-drive");
       const { verifier } = await generatePKCE();
@@ -82,14 +88,14 @@ export default function ConnectCloudPage() {
       await provider.initiateOAuth(verifier);
     } catch (err) {
       console.error("Error iniciando OAuth:", err);
-      setError(t("onboarding.connect.errorDrive"));
+      setErrorClassification(classifyApiError(err));
       setIsConnecting(false);
     }
   };
 
   const handleDropboxConnect = async () => {
     try {
-      setError(null);
+      setErrorClassification(null);
       setIsConnectingDropbox(true);
       setStoredProvider("dropbox");
       const { verifier } = await generatePKCE();
@@ -97,7 +103,7 @@ export default function ConnectCloudPage() {
       await provider.initiateOAuth(verifier);
     } catch (err) {
       console.error("Error iniciando OAuth Dropbox:", err);
-      setError(t("onboarding.connect.errorDrive"));
+      setErrorClassification(classifyApiError(err));
       setIsConnectingDropbox(false);
     }
   };
@@ -134,7 +140,7 @@ export default function ConnectCloudPage() {
             </p>
           </div>
 
-          {error && (
+          {errorClassification && (
             <div className="mb-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 text-red-700 dark:text-red-400">
                 <svg
@@ -148,11 +154,13 @@ export default function ConnectCloudPage() {
                   <line x1="12" y1="8" x2="12" y2="12" />
                   <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
-                <span className="text-sm">{error}</span>
+                <span className="text-sm">
+                  {t(getApiErrorMessageKey(errorClassification.type))}
+                </span>
               </div>
               <button
                 type="button"
-                onClick={() => setError(null)}
+                onClick={() => setErrorClassification(null)}
                 className="text-red-500 hover:text-red-700 dark:hover:text-red-300"
                 aria-label={t("common.close")}
               >

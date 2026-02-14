@@ -124,6 +124,7 @@ export async function handleOAuthCallback(): Promise<OAuthResult> {
       success: false,
       error: err.error ?? "token_request_failed",
       errorDescription: err.error_description,
+      status: response.status,
     };
   }
 

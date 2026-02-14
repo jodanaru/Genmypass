@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Lock, Eye, EyeOff, Shield } from "lucide-react";
+import {
+  classifyApiError,
+  getApiErrorMessageKey,
+  type ApiErrorClassification,
+} from "@/lib/api-errors";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   getCurrentProvider,
@@ -50,10 +55,16 @@ export default function LockScreenPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorClassification, setErrorClassification] =
+    useState<ApiErrorClassification | null>(null);
   const [needsSetupAgain, setNeedsSetupAgain] = useState(false);
 
   const needsReconnect = error === LOCK_NO_TOKEN_KEY;
-  const errorDisplay = error && LOCK_ERROR_KEYS.includes(error) ? t(error) : error;
+  const errorDisplay = errorClassification
+    ? t(getApiErrorMessageKey(errorClassification.type))
+    : error && LOCK_ERROR_KEYS.includes(error)
+      ? t(error)
+      : error;
 
   useEffect(() => {
     const fileId = localStorage.getItem("genmypass_vault_file_id");
@@ -68,6 +79,7 @@ export default function LockScreenPage() {
 
   const handleReconnect = () => {
     setError(null);
+    setErrorClassification(null);
     navigate("/connect", { replace: true });
   };
 
@@ -81,6 +93,7 @@ export default function LockScreenPage() {
 
     setIsUnlocking(true);
     setError(null);
+    setErrorClassification(null);
 
     try {
       const fileId = localStorage.getItem("genmypass_vault_file_id");
@@ -130,12 +143,15 @@ export default function LockScreenPage() {
       navigate("/vault", { replace: true });
     } catch (err) {
       console.error("Unlock error:", err);
+      const classification = classifyApiError(err);
       const message =
         err instanceof Error ? err.message : t(LOCK_WRONG_PASSWORD_KEY);
       const isNoToken =
+        classification.type === "session_expired" ||
         message === "No hay token de acceso disponible" ||
         (message.includes("token") && message.includes("disponible"));
       const isFileGone =
+        classification.type === "not_found" ||
         message.includes("404") ||
         message.includes("not found") ||
         message.includes("No se encontró");
@@ -152,8 +168,13 @@ export default function LockScreenPage() {
         clearVaultState();
         setNeedsSetupAgain(true);
         setError(LOCK_VAULT_GONE_KEY);
+        setErrorClassification(null);
+      } else if (isNoToken) {
+        setError(LOCK_NO_TOKEN_KEY);
+        setErrorClassification(null);
       } else {
-        setError(isNoToken ? LOCK_NO_TOKEN_KEY : message);
+        setError(null);
+        setErrorClassification(classification);
       }
     } finally {
       setIsUnlocking(false);
@@ -186,9 +207,18 @@ export default function LockScreenPage() {
             {t("lock.enterPassword")}
           </p>
 
-          {error && (
+          {(error || errorClassification) && (
             <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
               <p className="text-red-600 dark:text-red-400 text-sm">{errorDisplay}</p>
+              {errorClassification?.retryable && (
+                <button
+                  type="button"
+                  onClick={() => handleUnlock()}
+                  className="mt-3 w-full h-12 rounded-xl font-semibold text-sm text-white bg-primary-500 hover:bg-primary-600 transition-colors"
+                >
+                  {t("common.retry")}
+                </button>
+              )}
               {needsReconnect && (
                 <button
                   type="button"
@@ -222,6 +252,7 @@ export default function LockScreenPage() {
                     }
                     clearVaultState();
                     setError(null);
+                    setErrorClassification(null);
                     setNeedsSetupAgain(false);
                     navigate("/", { replace: true });
                   }}

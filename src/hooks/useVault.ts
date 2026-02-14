@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { classifyApiError } from "@/lib/api-errors";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   getSettingsForVault,
@@ -23,10 +24,12 @@ export function useVault() {
 
   const vault = useVaultStore((s) => s.vault);
   const isLoading = useVaultStore((s) => s.isLoading);
-  const error = useVaultStore((s) => s.error);
+  const errorClassification = useVaultStore((s) => s.errorClassification);
   const setVault = useVaultStore((s) => s.setVault);
   const setLoading = useVaultStore((s) => s.setLoading);
   const setError = useVaultStore((s) => s.setError);
+  const setErrorClassification = useVaultStore((s) => s.setErrorClassification);
+  const retryLoadTrigger = useVaultStore((s) => s.retryLoadTrigger);
 
   useEffect(() => {
     const loadVault = async () => {
@@ -82,7 +85,7 @@ export function useVault() {
         }
       } catch (err) {
         console.error("Error loading vault:", err);
-        setError("Error al cargar el vault. Verifica tu conexión.");
+        setErrorClassification(classifyApiError(err));
       } finally {
         setLoading(false);
       }
@@ -97,6 +100,8 @@ export function useVault() {
     setVault,
     setLoading,
     setError,
+    setErrorClassification,
+    retryLoadTrigger,
   ]);
 
   const save = useCallback(async () => {
@@ -129,10 +134,15 @@ export function useVault() {
     }
   }, [masterKey]);
 
+  const retryLoad = useCallback(() => {
+    useVaultStore.getState().incrementRetryLoadTrigger();
+  }, []);
+
   return {
     vault,
     isLoading,
-    error,
+    errorClassification,
+    retryLoad,
     save,
     entries: vault?.entries ?? [],
     folders: vault?.folders ?? [],

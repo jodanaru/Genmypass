@@ -98,16 +98,16 @@ describe("hibp", () => {
       expect(fetch).toHaveBeenCalledTimes(1);
     });
 
-    it("returns { breached: false, count: 0 } on network error without throwing", async () => {
+    it("returns { breached: false, count: 0, error: true } on network error without throwing", async () => {
       vi.mocked(fetch).mockRejectedValueOnce(new Error("Network error"));
 
       const { checkPasswordBreach } = await import("../index.js");
       const result = await checkPasswordBreach("any");
 
-      expect(result).toEqual({ breached: false, count: 0 });
+      expect(result).toEqual({ breached: false, count: 0, error: true });
     });
 
-    it("returns { breached: false, count: 0 } when API returns non-OK", async () => {
+    it("returns { breached: false, count: 0, error: true, status } when API returns non-OK", async () => {
       vi.mocked(fetch).mockResolvedValueOnce({
         ok: false,
         status: 503,
@@ -116,7 +116,12 @@ describe("hibp", () => {
       const { checkPasswordBreach } = await import("../index.js");
       const result = await checkPasswordBreach("any");
 
-      expect(result).toEqual({ breached: false, count: 0 });
+      expect(result).toEqual({
+        breached: false,
+        count: 0,
+        error: true,
+        status: 503,
+      });
     });
   });
 });

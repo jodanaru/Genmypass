@@ -140,6 +140,7 @@
     "close": "Cerrar",
     "connecting": "Conectando...",
     "tryAgain": "Intentar de nuevo",
+    "retry": "Reintentar",
     "cancel": "Cancelar",
     "save": "Guardar",
     "delete": "Eliminar",
@@ -153,7 +154,17 @@
     "title": "Página de error",
     "generic": "Errores generales de la aplicación",
     "specialRoute": "Ruta especial (error)",
-    "goToVault": "Ir al Bóveda"
+    "goToVault": "Ir al Bóveda",
+    "api": {
+      "network": "Sin conexión. Comprueba tu red e inténtalo de nuevo.",
+      "serviceUnavailable": "El servicio no está disponible. Inténtalo más tarde.",
+      "tooManyRequests": "Demasiadas peticiones. Espera un momento e inténtalo de nuevo.",
+      "sessionExpired": "La sesión ha expirado. Vuelve a iniciar sesión.",
+      "forbidden": "No tienes permiso para realizar esta acción.",
+      "notFound": "No se encontró el recurso.",
+      "badRequest": "Solicitud incorrecta. Comprueba los datos.",
+      "unknown": "Ha ocurrido un error. Inténtalo de nuevo."
+    }
   },
   "lock": {
     "title": "Genmypass",

@@ -22,6 +22,8 @@ export interface OAuthResult {
   tokens?: TokenResponse;
   error?: string;
   errorDescription?: string;
+  /** HTTP status from proxy when success === false (for ADR-016 error classification). */
+  status?: number;
 }
 
 export interface CloudStorageProvider {

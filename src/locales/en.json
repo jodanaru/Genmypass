@@ -140,6 +140,7 @@
     "close": "Close",
     "connecting": "Connecting...",
     "tryAgain": "Try again",
+    "retry": "Retry",
     "cancel": "Cancel",
     "save": "Save",
     "delete": "Delete",
@@ -153,7 +154,17 @@
     "title": "Error Page",
     "generic": "General application errors",
     "specialRoute": "Special route (error)",
-    "goToVault": "Go to Vault"
+    "goToVault": "Go to Vault",
+    "api": {
+      "network": "No connection. Check your network and try again.",
+      "serviceUnavailable": "Service unavailable. Try again later.",
+      "tooManyRequests": "Too many requests. Wait a moment and try again.",
+      "sessionExpired": "Session expired. Please sign in again.",
+      "forbidden": "You do not have permission to perform this action.",
+      "notFound": "Resource not found.",
+      "badRequest": "Invalid request. Check the data.",
+      "unknown": "An error occurred. Please try again."
+    }
   },
   "lock": {
     "title": "Genmypass",
