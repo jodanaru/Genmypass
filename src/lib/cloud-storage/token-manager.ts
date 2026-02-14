@@ -128,6 +128,33 @@ export function stopAutoRefresh(): void {
   }
 }
 
+/**
+ * Intenta restaurar la sesión usando el refresh token cifrado en localStorage.
+ * Útil cuando se abre una nueva pestaña (sessionStorage vacío) pero el refresh
+ * token sigue disponible en localStorage cifrado con la master key.
+ * Devuelve true si se restauró correctamente, false en caso contrario.
+ */
+export async function tryRestoreWithRefreshToken(
+  masterKey: Uint8Array,
+  provider: CloudStorageProvider
+): Promise<boolean> {
+  // Si ya tenemos un access token válido, no hace falta refrescar
+  if (getAccessToken()) return true;
+
+  const encrypted = getStoredRefreshToken();
+  if (!encrypted) return false;
+
+  try {
+    const refreshToken = await decryptRefreshToken(encrypted, masterKey);
+    const tokens = await provider.refreshAccessToken(refreshToken);
+    setTokens(tokens);
+    startAutoRefresh(masterKey, provider);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function clearSessionTokens(): void {
   stopAutoRefresh();
   currentAccessToken = null;

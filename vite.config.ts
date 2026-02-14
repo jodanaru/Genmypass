@@ -6,6 +6,26 @@ import path from "path";
 export default defineConfig({
   build: {
     target: "esnext", // libsodium-sumo usa top-level await
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/react-dom/") || id.includes("node_modules/react/")) {
+            return "react";
+          }
+          if (id.includes("node_modules/react-router")) {
+            return "router";
+          }
+          if (id.includes("libsodium") || id.includes("sodium")) {
+            return "crypto";
+          }
+          if (id.includes("node_modules/i18next") || id.includes("node_modules/react-i18next")) {
+            return "i18n";
+          }
+        },
+      },
+    },
+    // libsodium-sumo es ~1 MB y no admite más división
+    chunkSizeWarningLimit: 1100,
   },
   plugins: [
     react(),

@@ -128,11 +128,14 @@ export default function SetupPasswordPage() {
       localStorage.setItem("genmypass_salt", toBase64(salt));
       setMasterKey(masterKey);
 
-      const tempRefresh = sessionStorage.getItem("genmypass_temp_refresh");
+      const tempRefresh =
+        sessionStorage.getItem("genmypass_temp_refresh") ??
+        localStorage.getItem("genmypass_temp_refresh");
       if (tempRefresh) {
         const encryptedRefresh = await encryptRefreshToken(tempRefresh, masterKey);
         storeRefreshToken(encryptedRefresh);
         sessionStorage.removeItem("genmypass_temp_refresh");
+        localStorage.removeItem("genmypass_temp_refresh");
       }
 
       const emptyVault = {

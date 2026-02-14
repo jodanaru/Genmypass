@@ -11,7 +11,12 @@ import { useAuthStore } from "@/stores/auth-store";
 import {
   getCurrentProvider,
   getAccessToken,
+  getStoredRefreshToken,
+  setTokens,
   startAutoRefresh,
+  tryRestoreWithRefreshToken,
+  encryptRefreshToken,
+  storeRefreshToken,
 } from "@/lib/cloud-storage";
 import {
   initSodium,
@@ -72,7 +77,13 @@ export default function LockScreenPage() {
       navigate("/", { replace: true });
       return;
     }
-    if (fileId && !getAccessToken()) {
+    // Solo mostrar error de reconexión si NO hay access token Y TAMPOCO hay
+    // refresh token (cifrado o temporal). Si hay algún refresh token disponible,
+    // podremos restaurar la sesión cuando el usuario introduzca su contraseña.
+    const hasRefreshToken =
+      !!getStoredRefreshToken() ||
+      !!localStorage.getItem("genmypass_temp_refresh");
+    if (fileId && !getAccessToken() && !hasRefreshToken) {
       setError(LOCK_NO_TOKEN_KEY);
     }
   }, [navigate]);
@@ -85,11 +96,6 @@ export default function LockScreenPage() {
 
   const handleUnlock = async () => {
     if (!password.trim() || isUnlocking) return;
-
-    if (!getAccessToken()) {
-      setError(LOCK_NO_TOKEN_KEY);
-      return;
-    }
 
     setIsUnlocking(true);
     setError(null);
@@ -110,12 +116,54 @@ export default function LockScreenPage() {
         setError(LOCK_NO_TOKEN_KEY);
         return;
       }
+
+      // Derivar la clave primero para poder descifrar el refresh token si es necesario
+      const saltBase64 = localStorage.getItem("genmypass_salt");
+      let key: Uint8Array | null = null;
+
+      if (saltBase64) {
+        const salt = fromBase64(saltBase64);
+        ({ key } = deriveKey(password, salt));
+      }
+
+      // Si no hay access token, intentar restaurar la sesión
+      if (!getAccessToken()) {
+        let restored = false;
+
+        // 1. Intentar con el refresh token cifrado en localStorage (ert)
+        if (key) {
+          restored = await tryRestoreWithRefreshToken(key, provider);
+        }
+
+        // 2. Si falló, intentar con el refresh token temporal sin cifrar
+        //    (disponible tras una reconexión reciente, antes de desbloquear)
+        if (!restored) {
+          const tempRefresh =
+            sessionStorage.getItem("genmypass_temp_refresh") ??
+            localStorage.getItem("genmypass_temp_refresh");
+          if (tempRefresh) {
+            try {
+              const tokens = await provider.refreshAccessToken(tempRefresh);
+              setTokens(tokens);
+              restored = true;
+            } catch {
+              // El refresh token temporal tampoco funciona
+            }
+          }
+        }
+
+        if (!restored) {
+          setError(LOCK_NO_TOKEN_KEY);
+          return;
+        }
+      }
+
       const encryptedContent = await provider.readVaultFile(fileId);
       const encrypted: EncryptedVault = JSON.parse(encryptedContent);
 
-      const saltBase64 =
-        encrypted.salt ?? localStorage.getItem("genmypass_salt");
-      if (!saltBase64) {
+      const vaultSaltBase64 =
+        encrypted.salt ?? saltBase64;
+      if (!vaultSaltBase64) {
         sessionStorage.setItem(
           "genmypass_vault_file_to_delete",
           fileId
@@ -126,8 +174,16 @@ export default function LockScreenPage() {
         return;
       }
 
-      const salt = fromBase64(saltBase64);
-      const { key } = deriveKey(password, salt);
+      // Si no derivamos la clave antes (salt no estaba en localStorage), derivar ahora
+      if (!key) {
+        const salt = fromBase64(vaultSaltBase64);
+        ({ key } = deriveKey(password, salt));
+      }
+
+      // Asegurar que el salt está persistido en localStorage para futuras sesiones
+      if (vaultSaltBase64 && !localStorage.getItem("genmypass_salt")) {
+        localStorage.setItem("genmypass_salt", vaultSaltBase64);
+      }
 
       await decrypt({
         key,
@@ -139,6 +195,19 @@ export default function LockScreenPage() {
       });
 
       setMasterKey(key);
+
+      // Si hay un refresh token temporal (de una reconexión reciente), cifrarlo
+      // y persistirlo en localStorage para que sobreviva entre pestañas/sesiones.
+      const tempRefresh =
+        sessionStorage.getItem("genmypass_temp_refresh") ??
+        localStorage.getItem("genmypass_temp_refresh");
+      if (tempRefresh) {
+        const encryptedRefresh = await encryptRefreshToken(tempRefresh, key);
+        storeRefreshToken(encryptedRefresh);
+        sessionStorage.removeItem("genmypass_temp_refresh");
+        localStorage.removeItem("genmypass_temp_refresh");
+      }
+
       startAutoRefresh(key, provider);
       navigate("/vault", { replace: true });
     } catch (err) {

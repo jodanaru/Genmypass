@@ -22,6 +22,7 @@ export {
   startAutoRefresh,
   stopAutoRefresh,
   clearSessionTokens,
+  tryRestoreWithRefreshToken,
 } from "./token-manager.js";
 export { generatePKCE, generateState } from "./pkce.js";
 export type { PKCEPair } from "./pkce.js";

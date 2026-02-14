@@ -52,6 +52,8 @@ export async function initiateOAuthFlow(verifier: string): Promise<void> {
     code_challenge: challenge,
     code_challenge_method: "S256",
     state,
+    access_type: "offline",
+    prompt: "consent",
   });
 
   window.location.href = `${GOOGLE_AUTH_URL}?${params.toString()}`;

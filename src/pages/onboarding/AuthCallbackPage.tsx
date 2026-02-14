@@ -57,6 +57,12 @@ export default function AuthCallbackPage() {
             "genmypass_temp_refresh",
             result.tokens.refresh_token
           );
+          // También guardar en localStorage para que esté disponible en otras
+          // pestañas. Se eliminará en cuanto se cifre con la master key.
+          localStorage.setItem(
+            "genmypass_temp_refresh",
+            result.tokens.refresh_token
+          );
         }
 
         const email = await provider.getUserEmail();
