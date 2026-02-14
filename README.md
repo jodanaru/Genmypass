@@ -38,6 +38,8 @@ pnpm dev
 
 Abre [http://localhost:5173](http://localhost:5173). Favicon y logo se sirven desde `public/` (`/favicon.ico`, `/logo.png`).
 
+La **presentación del proyecto (TFM)** está disponible en [/slides](http://localhost:5173/slides). En producción: `https://genmypass.app/slides`.
+
 ## Build y PWA
 
 ```bash

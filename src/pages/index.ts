@@ -1,4 +1,5 @@
 export { Landing } from "./Landing";
+export { default as SlidesPage } from "./SlidesPage";
 
 // Onboarding (rutas públicas)
 export { default as AuthCallbackPage } from "./onboarding/AuthCallbackPage";

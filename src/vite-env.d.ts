@@ -24,3 +24,13 @@ declare module "libsodium-wrappers-sumo" {
   };
   export default sodium;
 }
+
+declare module "reveal.js/dist/reveal.esm.js" {
+  interface RevealApi {
+    initialize(): Promise<void>;
+    destroy(): void;
+    layout(): void;
+  }
+  function Reveal(revealElement: HTMLElement | null, options?: Record<string, unknown>): RevealApi;
+  export default Reveal;
+}

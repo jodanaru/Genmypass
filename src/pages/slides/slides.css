@@ -1,0 +1,67 @@
+/* Contenedor de la página de slides: tema según .dark en el wrapper */
+.slides-page {
+  background-color: #f8fafc;
+}
+.slides-page.dark {
+  background-color: #0f0f0f;
+}
+
+/* Modo claro: sobrescribir variables de reveal (tema black por defecto) */
+.slides-page:not(.dark) .reveal {
+  --r-background-color: #f8fafc;
+  --r-main-color: #1e293b;
+  --r-heading-color: #0f172a;
+  --r-link-color: #2563eb;
+  --r-link-color-hover: #1d4ed8;
+  --r-selection-background-color: rgba(37, 99, 235, 0.3);
+  --r-selection-color: #0f172a;
+}
+
+.slides-page:not(.dark) .reveal .slides section.slide--scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.06);
+}
+.slides-page:not(.dark) .reveal .slides section.slide--scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+.slides-page:not(.dark) .reveal .slides section.slide--scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/*
+ * Diapositivas con mucho contenido: el cuerpo hace scroll en lugar de cortarse.
+ * La section entera hace scroll (reveal escala el viewport; limitamos altura con vh).
+ */
+.reveal .slides section.slide--scroll {
+  display: block !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  max-height: 85vh !important;
+  box-sizing: border-box !important;
+  padding: 1rem 2rem 2rem !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reveal .slides section.slide--scroll .slide-content {
+  /* Solo agrupa contenido; el scroll lo hace la section */
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Scrollbar discreta en tema oscuro */
+.reveal .slides section.slide--scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.reveal .slides section.slide--scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.reveal .slides section.slide--scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.reveal .slides section.slide--scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}

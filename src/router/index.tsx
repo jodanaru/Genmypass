@@ -1,5 +1,5 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import { VaultAppLayout } from "@/components/layout";
+import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
+import { ThemeAndLanguageBar, VaultAppLayout } from "@/components/layout";
 import { Landing } from "@/pages";
 import {
   AuthCallbackPage,
@@ -7,6 +7,7 @@ import {
   SetupPasswordPage,
   SetupSecurityModePage,
   SetupSecretKeyPage,
+  SlidesPage,
   VaultPage,
   EntryDetailPage,
   EntryFormPage,
@@ -23,41 +24,47 @@ import {
   ErrorPage,
 } from "@/pages";
 
+function RootLayout() {
+  return (
+    <>
+      <ThemeAndLanguageBar />
+      <Outlet />
+    </>
+  );
+}
+
 export const router = createBrowserRouter([
-  // Landing (página inicial pública)
-  { path: "/", element: <Landing /> },
-
-  // Rutas públicas (onboarding)
-  { path: "/connect", element: <ConnectCloudPage /> },
-  { path: "/setup/password", element: <SetupPasswordPage /> },
-  { path: "/setup/security", element: <SetupSecurityModePage /> },
-  { path: "/setup/secret-key", element: <SetupSecretKeyPage /> },
-  { path: "/auth/callback", element: <AuthCallbackPage /> },
-
-  // Rutas especiales
-  { path: "/lock", element: <LockScreenPage /> },
-  { path: "/offline", element: <OfflinePage /> },
-  { path: "/error", element: <ErrorPage /> },
-
-  // Rutas protegidas: top bar + contenido + bottom nav (único layout)
   {
-    element: <VaultAppLayout />,
+    element: <RootLayout />,
     children: [
-      { path: "vault", element: <VaultPage /> },
-      { path: "generator", element: <GeneratorPage /> },
-      { path: "settings", element: <SettingsPage /> },
-      { path: "entry/:id", element: <EntryDetailPage /> },
-      { path: "entry/new", element: <EntryFormPage /> },
-      { path: "entry/:id/edit", element: <EntryFormPage /> },
-      { path: "search", element: <SearchPage /> },
-      { path: "settings/password", element: <ChangePasswordPage /> },
-      { path: "settings/folders", element: <FoldersPage /> },
-      { path: "settings/security-audit", element: <SecurityAuditPage /> },
-      { path: "settings/export", element: <ExportPage /> },
-      { path: "settings/import", element: <ImportPage /> },
+      { path: "/", element: <Landing /> },
+      { path: "/connect", element: <ConnectCloudPage /> },
+      { path: "/setup/password", element: <SetupPasswordPage /> },
+      { path: "/setup/security", element: <SetupSecurityModePage /> },
+      { path: "/setup/secret-key", element: <SetupSecretKeyPage /> },
+      { path: "/auth/callback", element: <AuthCallbackPage /> },
+      { path: "/slides", element: <SlidesPage /> },
+      { path: "/lock", element: <LockScreenPage /> },
+      { path: "/offline", element: <OfflinePage /> },
+      { path: "/error", element: <ErrorPage /> },
+      {
+        element: <VaultAppLayout />,
+        children: [
+          { path: "vault", element: <VaultPage /> },
+          { path: "generator", element: <GeneratorPage /> },
+          { path: "settings", element: <SettingsPage /> },
+          { path: "entry/:id", element: <EntryDetailPage /> },
+          { path: "entry/new", element: <EntryFormPage /> },
+          { path: "entry/:id/edit", element: <EntryFormPage /> },
+          { path: "search", element: <SearchPage /> },
+          { path: "settings/password", element: <ChangePasswordPage /> },
+          { path: "settings/folders", element: <FoldersPage /> },
+          { path: "settings/security-audit", element: <SecurityAuditPage /> },
+          { path: "settings/export", element: <ExportPage /> },
+          { path: "settings/import", element: <ImportPage /> },
+        ],
+      },
+      { path: "*", element: <Navigate to="/" replace /> },
     ],
   },
-
-  // Fallback
-  { path: "*", element: <Navigate to="/" replace /> },
 ]);
