@@ -16,6 +16,7 @@ const LOCAL_KEYS = [
   "genmypass_user_email",
   "genmypass_security_mode",
   "genmypass-settings", // Zustand persist
+  "genmypass-offline-queue", // Pending vault save when offline
   "ert", // encrypted refresh token
 ] as const;
 

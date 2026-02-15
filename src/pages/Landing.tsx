@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ShieldCheck, Check } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
@@ -108,6 +108,13 @@ export function Landing() {
           >
             {t("landing.getStarted")}
           </button>
+
+          <Link
+            to="/slides"
+            className="inline-block mt-4 text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 font-medium transition-colors underline underline-offset-4"
+          >
+            {t("landing.presentation")}
+          </Link>
         </div>
       </main>
 

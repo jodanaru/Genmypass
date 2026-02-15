@@ -1,6 +1,8 @@
 import { lazy, Suspense } from "react";
 import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import { ThemeAndLanguageBar, VaultAppLayout } from "@/components/layout";
+import { FlushOfflineQueue } from "@/components/FlushOfflineQueue";
+import { OfflineGuard } from "@/components/OfflineGuard";
 
 const Landing = lazy(() => import("@/pages/Landing").then((m) => ({ default: m.Landing })));
 const AuthCallbackPage = lazy(() => import("@/pages/onboarding/AuthCallbackPage"));
@@ -35,6 +37,8 @@ function PageLoader() {
 function RootLayout() {
   return (
     <>
+      <FlushOfflineQueue />
+      <OfflineGuard />
       <ThemeAndLanguageBar />
       <Suspense fallback={<PageLoader />}>
         <Outlet />

@@ -29,16 +29,22 @@
 
 /*
  * Diapositivas con mucho contenido: el cuerpo hace scroll en lugar de cortarse.
- * La section entera hace scroll (reveal escala el viewport; limitamos altura con vh).
+ * reveal.js aplica transform: scale() que rompe overflow-y en hijos.
+ * Solución: forzar que la section tenga dimensiones reales y scroll propio.
  */
 .reveal .slides section.slide--scroll {
   display: block !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   max-height: 85vh !important;
+  height: auto !important;
   box-sizing: border-box !important;
   padding: 1rem 2rem 2rem !important;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 1;
 }
 
 .reveal .slides section.slide--scroll .slide-content {

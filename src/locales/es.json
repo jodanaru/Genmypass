@@ -10,6 +10,7 @@
     "featureEncryption": "Cifrado AES-256",
     "featureEncryptionDesc": "Seguridad de nivel militar",
     "getStarted": "Comenzar",
+    "presentation": "Presentación",
     "footer": "© 2024 Genmypass. Hecho con ❤️ para tu seguridad."
   },
   "nav": {
@@ -188,7 +189,12 @@
     "title": "Sin conexión",
     "specialRoute": "Ruta especial (sin conexión)",
     "description": "Modo sin conexión",
-    "retryOrVault": "Reintentar / Bóveda"
+    "retryOrVault": "Reintentar / Bóveda",
+    "banner": "Estás desconectado. Los cambios se guardarán al recuperar la conexión."
+  },
+  "sync": {
+    "pending": "Cambios pendientes de sincronización",
+    "retryNow": "Reintentar ahora"
   },
   "vault": {
     "decrypting": "Descifrando tu bóveda...",
@@ -471,6 +477,7 @@
     "overDaysAgo": "Hace más de {{count}} días"
   },
   "slides": {
+    "back": "Volver",
     "title": "Genmypass",
     "subtitle": "Gestor de contraseñas zero-knowledge",
     "tfm": "Trabajo de Fin de Máster",

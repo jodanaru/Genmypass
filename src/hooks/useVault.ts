@@ -7,6 +7,7 @@ import {
   useSettingsStore,
 } from "@/stores/settings-store";
 import { useVaultStore, type Vault } from "@/stores/vault-store";
+import { useOfflineQueueStore } from "@/stores/offline-queue-store";
 import { getCurrentProvider, saveVault } from "@/lib/cloud-storage";
 import { decrypt, encrypt, fromBase64, toBase64 } from "@/lib/crypto";
 
@@ -111,6 +112,7 @@ export function useVault() {
     const currentSalt = state.vaultFileSalt;
     if (!currentVault || !masterKey || !currentFileId) return;
 
+    let encryptedVault: string | undefined;
     try {
       const payload = { ...currentVault, settings: getSettingsForVault() };
       const vaultJson = JSON.stringify(payload);
@@ -120,7 +122,7 @@ export function useVault() {
         plaintext: vaultBytes,
       });
 
-      const encryptedVault = JSON.stringify({
+      encryptedVault = JSON.stringify({
         ...(currentSalt ? { salt: currentSalt } : {}),
         iv: toBase64(iv),
         tag: toBase64(tag),
@@ -130,6 +132,14 @@ export function useVault() {
       await saveVault(encryptedVault, currentFileId);
     } catch (err) {
       console.error("Error saving vault:", err);
+      const classification = classifyApiError(err);
+      if (classification.type === "network" && classification.retryable && typeof encryptedVault === "string") {
+        useOfflineQueueStore.getState().setPendingSave({
+          encryptedContent: encryptedVault,
+          fileId: currentFileId,
+        });
+        return;
+      }
       throw err;
     }
   }, [masterKey]);

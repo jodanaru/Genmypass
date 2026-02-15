@@ -10,6 +10,7 @@
     "featureEncryption": "AES-256 Encryption",
     "featureEncryptionDesc": "Military-grade security",
     "getStarted": "Get Started",
+    "presentation": "Presentation",
     "footer": "© 2024 Genmypass. Made with ❤️ for your security."
   },
   "nav": {
@@ -188,7 +189,12 @@
     "title": "Offline",
     "specialRoute": "Special route (offline)",
     "description": "Offline mode",
-    "retryOrVault": "Retry / Vault"
+    "retryOrVault": "Retry / Vault",
+    "banner": "You are offline. Changes will sync when you're back online."
+  },
+  "sync": {
+    "pending": "Changes pending sync",
+    "retryNow": "Retry now"
   },
   "vault": {
     "decrypting": "Decrypting your vault...",
@@ -471,6 +477,7 @@
     "overDaysAgo": "Over {{count}} days ago"
   },
   "slides": {
+    "back": "Back",
     "title": "Genmypass",
     "subtitle": "Zero-knowledge password manager",
     "tfm": "Master's Final Project",
