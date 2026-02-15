@@ -134,6 +134,66 @@ function parseCsvLine(line: string): string[] {
 }
 
 /**
+ * Mapa de alias para cabeceras CSV localizadas (1Password exporta en el idioma del sistema).
+ * Normaliza a nombres canónicos en inglés para que el parser funcione con cualquier idioma.
+ */
+const HEADER_ALIASES: Record<string, string> = {
+  // EN (canónico)
+  title: "title",
+  password: "password",
+  username: "username",
+  notes: "notes",
+  type: "type",
+  url: "url",
+  name: "name",
+  user: "user",
+  folder: "folder",
+  favorite: "favorite",
+  grouping: "grouping",
+  extra: "extra",
+  fav: "fav",
+  // ES
+  "título": "title",
+  "contraseña": "password",
+  "nombre de usuario": "username",
+  "notas": "notes",
+  "tipo": "type",
+  "primera contraseña de un solo uso": "totp",
+  "carpeta": "folder",
+  "favorito": "favorite",
+  "nombre": "name",
+  // FR
+  titre: "title",
+  "mot de passe": "password",
+  "nom d'utilisateur": "username",
+  taper: "type",
+  // DE
+  titel: "title",
+  passwort: "password",
+  benutzername: "username",
+  notizen: "notes",
+  typ: "type",
+  // PT
+  senha: "password",
+  "nome de usuário": "username",
+  "anotações": "notes",
+};
+
+function normalizeHeader(header: string): string {
+  const lower = header.toLowerCase().trim();
+  return HEADER_ALIASES[lower] ?? lower;
+}
+
+/** Valores localizados del tipo "Login" en 1Password CSV exports. */
+const TYPE_LOGIN_ALIASES = new Set([
+  "login",
+  "inicio de sesión",
+  "inicio de sesion",
+  "connexion",
+  "anmeldung",
+]);
+
+/**
  * Importa desde archivo .genmypass (backup cifrado).
  */
 export async function importFromGenmypass(
@@ -296,18 +356,18 @@ export async function importFromCSV(file: File): Promise<ImportResult> {
   }
 
   const header = parseCsvLine(lines[0]!);
-  const headerLower = header.map((h) => h.toLowerCase().trim());
-  const nameIdx = headerLower.findIndex(
+  const headerNorm = header.map(normalizeHeader);
+  const nameIdx = headerNorm.findIndex(
     (h) => h === "name" || h === "title"
   );
-  const urlIdx = headerLower.findIndex((h) => h === "url");
-  const userIdx = headerLower.findIndex(
+  const urlIdx = headerNorm.findIndex((h) => h === "url");
+  const userIdx = headerNorm.findIndex(
     (h) => h === "username" || h === "user"
   );
-  const passIdx = headerLower.findIndex((h) => h === "password");
-  const notesIdx = headerLower.findIndex((h) => h === "notes");
-  const folderIdx = headerLower.findIndex((h) => h === "folder");
-  const favoriteIdx = headerLower.findIndex((h) => h === "favorite");
+  const passIdx = headerNorm.findIndex((h) => h === "password");
+  const notesIdx = headerNorm.findIndex((h) => h === "notes");
+  const folderIdx = headerNorm.findIndex((h) => h === "folder");
+  const favoriteIdx = headerNorm.findIndex((h) => h === "favorite");
 
   if (nameIdx < 0 || passIdx < 0) {
     errors.push("CSV must have at least 'name' and 'password' columns");
@@ -470,14 +530,14 @@ export async function importFromLastPass(file: File): Promise<ImportResult> {
   }
 
   const header = parseCsvLine(lines[0]!);
-  const headerLower = header.map((h) => h.toLowerCase().trim());
-  const urlIdx = headerLower.indexOf("url");
-  const userIdx = headerLower.indexOf("username");
-  const passIdx = headerLower.indexOf("password");
-  const extraIdx = headerLower.indexOf("extra");
-  const nameIdx = headerLower.indexOf("name");
-  const groupIdx = headerLower.indexOf("grouping");
-  const favIdx = headerLower.indexOf("fav");
+  const headerNorm = header.map(normalizeHeader);
+  const urlIdx = headerNorm.indexOf("url");
+  const userIdx = headerNorm.indexOf("username");
+  const passIdx = headerNorm.indexOf("password");
+  const extraIdx = headerNorm.indexOf("extra");
+  const nameIdx = headerNorm.indexOf("name");
+  const groupIdx = headerNorm.indexOf("grouping");
+  const favIdx = headerNorm.indexOf("fav");
 
   if (passIdx < 0) {
     errors.push("CSV must have 'password' column");
@@ -566,23 +626,24 @@ export async function detectImportFormat(
       /* not valid JSON */
     }
   }
-  const firstLine = text.split(/\r?\n/)[0]?.toLowerCase() ?? "";
+  const firstLine = text.split(/\r?\n/)[0] ?? "";
   if (
     name.endsWith(".csv") ||
     (text.trim().length > 0 &&
       !text.trim().startsWith("{") &&
       firstLine.includes(","))
   ) {
+    const headers = parseCsvLine(firstLine).map(normalizeHeader);
     if (
-      firstLine.includes("url") &&
-      firstLine.includes("username") &&
-      firstLine.includes("grouping")
+      headers.includes("url") &&
+      headers.includes("username") &&
+      headers.includes("grouping")
     )
       return "csv-lastpass";
     if (
-      firstLine.includes("title") &&
-      firstLine.includes("url") &&
-      firstLine.includes("username")
+      headers.includes("title") &&
+      headers.includes("url") &&
+      headers.includes("username")
     )
       return "csv-1password";
     return "csv";
@@ -619,13 +680,13 @@ export async function importFrom1Password(file: File): Promise<ImportResult> {
   }
 
   const header = parseCsvLine(lines[0]!);
-  const headerLower = header.map((h) => h.toLowerCase().trim());
-  const titleIdx = headerLower.indexOf("title");
-  const urlIdx = headerLower.indexOf("url");
-  const userIdx = headerLower.indexOf("username");
-  const passIdx = headerLower.indexOf("password");
-  const notesIdx = headerLower.indexOf("notes");
-  const typeIdx = headerLower.indexOf("type");
+  const headerNorm = header.map(normalizeHeader);
+  const titleIdx = headerNorm.indexOf("title");
+  const urlIdx = headerNorm.indexOf("url");
+  const userIdx = headerNorm.indexOf("username");
+  const passIdx = headerNorm.indexOf("password");
+  const notesIdx = headerNorm.indexOf("notes");
+  const typeIdx = headerNorm.indexOf("type");
 
   if (passIdx < 0) {
     errors.push("CSV must have 'Password' column");
@@ -637,7 +698,7 @@ export async function importFrom1Password(file: File): Promise<ImportResult> {
   for (let i = 1; i < lines.length; i++) {
     const cells = parseCsvLine(lines[i]!);
     const type = sanitize(cells[typeIdx] ?? "").toLowerCase();
-    if (type && type !== "login") continue;
+    if (type && !TYPE_LOGIN_ALIASES.has(type)) continue;
 
     const title = sanitize(cells[titleIdx] ?? "") || "Untitled";
     const url = sanitize(cells[urlIdx] ?? "");

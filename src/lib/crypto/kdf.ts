@@ -7,10 +7,10 @@ import sodium from "libsodium-wrappers-sumo";
 import type { Argon2Params, KDFResult, Salt } from "./types.js";
 import { SALT_LENGTH } from "./utils.js";
 
-/** Parámetros por defecto: Argon2id, 64 MiB, 2 ops. */
+/** Parámetros por defecto: Argon2id, 64 MiB, 3 ops (OWASP 2025). */
 export const DEFAULT_argon2_PARAMS: Argon2Params = {
   memLimit: 65536, // 64 MiB
-  opsLimit: 2,
+  opsLimit: 3,
   outputLen: 32,
 };
 
