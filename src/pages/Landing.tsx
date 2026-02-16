@@ -118,8 +118,14 @@ export function Landing() {
         </div>
       </main>
 
-      <footer className="py-6 text-center text-slate-400 dark:text-slate-500 text-sm">
+      <footer className="py-6 text-center text-slate-400 dark:text-slate-500 text-sm space-y-2">
         <p>{t("landing.footer")}</p>
+        <Link
+          to="/privacy"
+          className="inline-block text-slate-400 dark:text-slate-500 hover:text-primary-500 dark:hover:text-primary-400 underline underline-offset-4 transition-colors"
+        >
+          {t("landing.privacyPolicy")}
+        </Link>
       </footer>
     </div>
   );

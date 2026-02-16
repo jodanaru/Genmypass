@@ -14,6 +14,7 @@ const SlidesPage = lazy(() => import("@/pages/SlidesPage"));
 const LockScreenPage = lazy(() => import("@/pages/special/LockScreenPage"));
 const OfflinePage = lazy(() => import("@/pages/special/OfflinePage"));
 const ErrorPage = lazy(() => import("@/pages/special/ErrorPage"));
+const PrivacyPolicyPage = lazy(() => import("@/pages/special/PrivacyPolicyPage"));
 const VaultPage = lazy(() => import("@/pages/vault/VaultPage"));
 const EntryDetailPage = lazy(() => import("@/pages/vault/EntryDetailPage"));
 const EntryFormPage = lazy(() => import("@/pages/vault/EntryFormPage"));
@@ -61,6 +62,7 @@ export const router = createBrowserRouter([
       { path: "/lock", element: <LockScreenPage /> },
       { path: "/offline", element: <OfflinePage /> },
       { path: "/error", element: <ErrorPage /> },
+      { path: "/privacy", element: <PrivacyPolicyPage /> },
       {
         element: <VaultAppLayout />,
         children: [

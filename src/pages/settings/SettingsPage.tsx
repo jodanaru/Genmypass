@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
@@ -606,17 +606,15 @@ export default function SettingsPage() {
               </span>
               <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
             </a>
-            <a
-              href="https://genmypass.app/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to="/privacy"
               className="px-6 py-4 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
             >
               <span className="text-sm font-medium text-slate-900 dark:text-white">
                 {t("settings.privacy")}
               </span>
-              <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
-            </a>
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+            </Link>
             <div className="px-6 py-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse shrink-0" />
