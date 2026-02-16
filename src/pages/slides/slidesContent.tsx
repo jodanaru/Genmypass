@@ -28,12 +28,13 @@ export function SlidesContent(): ReactNode {
     <>
       {/* ===== Slide 1: Título ===== */}
       <section>
-        <img
-          src="/logo.png"
-          alt="Genmypass logo"
-          className="mx-auto mb-4"
-          style={{ width: 100, height: 100, borderRadius: "1rem" }}
-        />
+        <div style={{ display: "flex", justifyContent: "center", width: "100%", marginBottom: "1rem" }}>
+          <img
+            src="/logo.png"
+            alt="Genmypass logo"
+            style={{ width: 100, height: 100, borderRadius: "1rem", display: "block", margin: 0 }}
+          />
+        </div>
         <h1 className="text-4xl font-bold">{t("slides.title")}</h1>
         <p className="text-xl opacity-90 mt-2">{t("slides.subtitle")}</p>
         <p className="text-lg mt-4 italic opacity-70">{t("slides.tagline")}</p>
@@ -327,7 +328,7 @@ export function SlidesContent(): ReactNode {
             href="https://genmypass.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-400 underline text-xl"
+            className="demo-url underline text-xl"
           >
             {t("slides.demoUrl")}
           </a>

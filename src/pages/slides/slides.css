@@ -6,17 +6,108 @@
   background-color: #0f0f0f;
 }
 
-/* Modo claro: sobrescribir variables de reveal (tema black por defecto) */
-.slides-page:not(.dark) .reveal {
+/* ====================================================================
+   Modo CLARO: sobrescribir TODAS las variables de reveal.js (tema black).
+   Se usan selectores de alta especificidad para ganar al :root del tema.
+   ==================================================================== */
+.slides-page:not(.dark) .reveal,
+.slides-page:not(.dark) .reveal-viewport {
   --r-background-color: #f8fafc;
-  --r-main-color: #1e293b;
+  --r-main-color: #334155;
   --r-heading-color: #0f172a;
+  --r-heading-text-transform: none;
   --r-link-color: #2563eb;
   --r-link-color-hover: #1d4ed8;
+  --r-link-color-dark: #1e40af;
   --r-selection-background-color: rgba(37, 99, 235, 0.3);
   --r-selection-color: #0f172a;
+  background: #f8fafc !important;
+  background-color: #f8fafc !important;
+  color: #334155;
 }
 
+/* Forzar que el fondo de todas las capas de reveal.js sea claro */
+.slides-page:not(.dark) .reveal .slide-background,
+.slides-page:not(.dark) .reveal .slide-background-content {
+  background-color: #f8fafc !important;
+  background: #f8fafc !important;
+}
+
+/* Forzar color de texto en todas las secciones en modo claro */
+.slides-page:not(.dark) .reveal .slides section {
+  color: #334155;
+}
+
+.slides-page:not(.dark) .reveal .slides section h1,
+.slides-page:not(.dark) .reveal .slides section h2,
+.slides-page:not(.dark) .reveal .slides section h3 {
+  color: #0f172a;
+  text-transform: none;
+}
+
+.slides-page:not(.dark) .reveal .slides section h4 {
+  color: #1e293b;
+  text-transform: none;
+}
+
+.slides-page:not(.dark) .reveal .slides section p,
+.slides-page:not(.dark) .reveal .slides section li,
+.slides-page:not(.dark) .reveal .slides section span,
+.slides-page:not(.dark) .reveal .slides section strong {
+  color: inherit;
+}
+
+/* ====================================================================
+   Modo OSCURO: reforzar variables para que el tema black funcione bien.
+   ==================================================================== */
+.slides-page.dark .reveal,
+.slides-page.dark .reveal-viewport {
+  --r-background-color: #0f0f0f;
+  --r-main-color: #e2e8f0;
+  --r-heading-color: #f1f5f9;
+  --r-heading-text-transform: none;
+  --r-link-color: #60a5fa;
+  --r-link-color-hover: #93bbfd;
+  --r-selection-background-color: rgba(96, 165, 250, 0.3);
+  --r-selection-color: #f8fafc;
+  background: #0f0f0f !important;
+  background-color: #0f0f0f !important;
+  color: #e2e8f0;
+}
+
+.slides-page.dark .reveal .slides section {
+  color: #e2e8f0;
+}
+
+.slides-page.dark .reveal .slides section h1,
+.slides-page.dark .reveal .slides section h2,
+.slides-page.dark .reveal .slides section h3 {
+  color: #f1f5f9;
+  text-transform: none;
+}
+
+.slides-page.dark .reveal .slides section h4 {
+  text-transform: none;
+}
+
+/* ====================================================================
+   Controles de navegación de reveal.js
+   ==================================================================== */
+.slides-page:not(.dark) .reveal .controls {
+  color: #2563eb;
+}
+
+.slides-page:not(.dark) .reveal .progress {
+  color: #2563eb;
+}
+
+.slides-page:not(.dark) .reveal .progress span {
+  background: #2563eb;
+}
+
+/* ====================================================================
+   Scrollbar modo claro
+   ==================================================================== */
 .slides-page:not(.dark) .reveal .slides section.slide--scroll::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.06);
 }
@@ -537,6 +628,14 @@
 .slides-page:not(.dark) .compare-cell.genmypass {
   background: rgba(22, 163, 74, 0.06);
   color: #16a34a;
+}
+
+/* ===== Slide 9: Demo URL ===== */
+.demo-url {
+  color: #60a5fa;
+}
+.slides-page:not(.dark) .demo-url {
+  color: #2563eb;
 }
 
 /* ===== Slide 9: Demo items ===== */
