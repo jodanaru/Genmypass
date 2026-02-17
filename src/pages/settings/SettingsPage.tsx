@@ -266,13 +266,13 @@ export default function SettingsPage() {
             {t("settings.cloudStorage")}
           </h3>
 
-          <div className="flex items-center gap-4 px-6 py-4 justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+            <div className="flex items-center gap-4 min-w-0 flex-1">
               <div className="flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700 shrink-0 w-12 h-12">
                 <HardDrive className="w-5 h-5 text-slate-600 dark:text-slate-300" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-slate-900 dark:text-white font-medium">
                     {currentProvider === "dropbox"
                       ? t("onboarding.connect.dropbox")
@@ -287,24 +287,24 @@ export default function SettingsPage() {
                     </>
                   )}
                 </div>
-                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                <p className="text-slate-500 dark:text-slate-400 text-sm truncate">
                   {displayEmail}
                 </p>
               </div>
             </div>
             {isConnected && (
-              <div className="shrink-0 flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={handleDisconnectAndSwitch}
-                  className="px-4 py-2 text-sm font-bold text-primary-500 hover:bg-primary-500/10 dark:hover:bg-primary-500/10 rounded-lg transition-colors"
+                  className="px-4 py-2.5 text-sm font-bold text-primary-500 hover:bg-primary-500/10 dark:hover:bg-primary-500/10 rounded-lg transition-colors min-h-[44px] touch-manipulation"
                 >
                   {t("settings.disconnectAndSwitch")}
                 </button>
                 <button
                   type="button"
                   onClick={handleDisconnect}
-                  className="px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+                  className="px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors min-h-[44px] touch-manipulation"
                 >
                   {t("settings.disconnect")}
                 </button>
@@ -397,12 +397,12 @@ export default function SettingsPage() {
           </button>
 
           {/* Data Portability */}
-          <div className="flex items-center gap-4 px-6 py-4 justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-4">
+            <div className="flex items-center gap-4 min-w-0 flex-1">
               <div className="text-slate-500 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700 shrink-0 w-12 h-12">
                 <Database className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-slate-900 dark:text-white font-medium">
                   {t("settings.dataPortability")}
                 </p>
@@ -411,21 +411,21 @@ export default function SettingsPage() {
                 </p>
               </div>
             </div>
-            <div className="flex gap-3 shrink-0">
+            <div className="flex flex-wrap gap-3 shrink-0">
               <button
                 type="button"
                 onClick={() => navigate("/settings/import")}
-                className="px-4 py-2 rounded-lg bg-primary-500 text-white text-sm font-bold hover:bg-primary-600 transition-colors flex items-center gap-2"
+                className="px-4 py-2.5 rounded-lg bg-primary-500 text-white text-sm font-bold hover:bg-primary-600 transition-colors flex items-center justify-center gap-2 min-h-[44px] touch-manipulation"
               >
-                <Upload className="w-4 h-4" />
+                <Upload className="w-4 h-4 shrink-0" />
                 {t("settings.import")}
               </button>
               <button
                 type="button"
                 onClick={() => navigate("/settings/export")}
-                className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 min-h-[44px] touch-manipulation"
               >
-                <Download className="w-4 h-4" />
+                <Download className="w-4 h-4 shrink-0" />
                 {t("settings.export")}
               </button>
             </div>
