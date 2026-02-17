@@ -21,18 +21,6 @@ function GoogleDriveIcon() {
   );
 }
 
-function DropboxIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="w-10 h-10 shrink-0"
-      fill="#0061FF"
-    >
-      <path d="M6 2L1 5.2L6 8.4L11 5.2L6 2ZM18 2L13 5.2L18 8.4L23 5.2L18 2ZM1 11.6L6 14.8L11 11.6L6 8.4L1 11.6ZM13 11.6L18 14.8L23 11.6L18 8.4L13 11.6ZM6 15.6L11 18.8L6 22L1 18.8L6 15.6ZM18 15.6L13 18.8L18 22L23 18.8L18 15.6Z" />
-    </svg>
-  );
-}
-
 function InfoIcon() {
   return (
     <svg
@@ -243,7 +231,11 @@ export default function ConnectCloudPage() {
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-4 min-w-0">
                   <div className="w-12 h-12 flex items-center justify-center shrink-0">
-                    <DropboxIcon />
+                    <img
+                      src="/dropbox_128.svg"
+                      alt="Dropbox"
+                      className="w-10 h-10 shrink-0 object-contain"
+                    />
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-semibold text-slate-900 dark:text-white text-lg">
