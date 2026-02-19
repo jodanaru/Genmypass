@@ -34,8 +34,6 @@ yarn.lock
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Documentación privada (TFM)
-TFM/
 
 # =========================
 # Logs
