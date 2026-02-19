@@ -44,13 +44,14 @@ export async function checkPasswordBreach(
     return { breached: false, count: 0 };
   }
 
-  const cached = breachCache.get(password);
-  if (cached !== undefined) {
-    return cached;
-  }
-
   try {
     const fullHash = await sha1Hex(password);
+
+    const cached = breachCache.get(fullHash);
+    if (cached !== undefined) {
+      return cached;
+    }
+
     const prefix = fullHash.slice(0, 5);
     const suffix = fullHash.slice(5);
 
@@ -63,7 +64,6 @@ export async function checkPasswordBreach(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      console.warn("[HIBP] API returned non-OK:", response.status);
       return {
         breached: false,
         count: 0,
@@ -83,16 +83,15 @@ export async function checkPasswordBreach(
       if (lineSuffix.toUpperCase() === suffix.toUpperCase()) {
         const count = parseInt(countStr, 10) || 0;
         const result: BreachCheckResult = { breached: true, count };
-        breachCache.set(password, result);
+        breachCache.set(fullHash, result);
         return result;
       }
     }
 
     const result: BreachCheckResult = { breached: false, count: 0 };
-    breachCache.set(password, result);
+    breachCache.set(fullHash, result);
     return result;
-  } catch (err) {
-    console.warn("[HIBP] Breach check failed:", err);
+  } catch {
     return { breached: false, count: 0, error: true };
   }
 }

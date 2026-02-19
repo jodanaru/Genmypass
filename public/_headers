@@ -1,0 +1,7 @@
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://oauth2.googleapis.com https://www.googleapis.com https://api.dropboxapi.com https://content.dropboxapi.com https://api.pwnedpasswords.com https://*.genmypass.app; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';

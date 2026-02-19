@@ -184,6 +184,7 @@
     "wrongPasswordOrError": "Wrong password or error loading vault.",
     "reconnectDrive": "Reconnect Google Drive",
     "setupAgain": "Set up again",
+    "cooldown": "Wait {{seconds}}s",
     "encrypted": "AES-256 Encrypted",
     "zeroKnowledge": "Zero Knowledge",
     "footer": "Protected by end-to-end encryption. Your data never leaves your device unencrypted."

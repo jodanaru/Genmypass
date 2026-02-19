@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import { ThemeAndLanguageBar, VaultAppLayout } from "@/components/layout";
 import { FlushOfflineQueue } from "@/components/FlushOfflineQueue";
 import { OfflineGuard } from "@/components/OfflineGuard";
+import { ProtectedRoute } from "@/router/ProtectedRoute";
 
 const Landing = lazy(() => import("@/pages/Landing").then((m) => ({ default: m.Landing })));
 const AuthCallbackPage = lazy(() => import("@/pages/onboarding/AuthCallbackPage"));
@@ -64,7 +65,7 @@ export const router = createBrowserRouter([
       { path: "/error", element: <ErrorPage /> },
       { path: "/privacy", element: <PrivacyPolicyPage /> },
       {
-        element: <VaultAppLayout />,
+        element: <ProtectedRoute><VaultAppLayout /></ProtectedRoute>,
         children: [
           { path: "vault", element: <VaultPage /> },
           { path: "generator", element: <GeneratorPage /> },

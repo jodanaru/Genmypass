@@ -6,6 +6,19 @@ interface Env {
   GOOGLE_CLIENT_SECRET: string;
   DROPBOX_CLIENT_ID: string;
   DROPBOX_CLIENT_SECRET: string;
+  ALLOWED_ORIGINS?: string;
+}
+
+const DEFAULT_ALLOWED_ORIGINS = new Set([
+  "https://genmypass.app",
+  "http://localhost:5173",
+]);
+
+function getAllowedOrigins(env: Env): Set<string> {
+  if (env.ALLOWED_ORIGINS) {
+    return new Set(env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()));
+  }
+  return DEFAULT_ALLOWED_ORIGINS;
 }
 
 function corsHeaders(origin: string) {
@@ -13,18 +26,30 @@ function corsHeaders(origin: string) {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
   };
 }
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const origin = request.headers.get("Origin") || "*";
+    const origin = request.headers.get("Origin");
+    const allowed = getAllowedOrigins(env);
+
+    // Requests without Origin (same-origin / server-side proxy) are allowed.
+    // Cross-origin requests must come from an allowed origin.
+    if (origin !== null && !allowed.has(origin)) {
+      return new Response("Forbidden", { status: 403 });
+    }
+
+    const corsOrigin = origin ?? "";
 
     // CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: corsHeaders(origin),
+        headers: corsHeaders(corsOrigin),
       });
     }
 
@@ -42,7 +67,7 @@ export default {
         if (!body.code || !body.code_verifier || !body.redirect_uri) {
           return new Response(
             JSON.stringify({ error: "missing_params", message: "Faltan code, code_verifier o redirect_uri" }),
-            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) } }
           );
         }
 
@@ -69,18 +94,18 @@ export default {
               error: data.error || "token_request_failed",
               error_description: data.error_description,
             }),
-            { status: response.status, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+            { status: response.status, headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) } }
           );
         }
 
         return new Response(JSON.stringify(data), {
           status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders(origin) },
+          headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) },
         });
       } catch (err) {
         return new Response(
           JSON.stringify({ error: "internal_error", message: "Error en el servidor" }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) } }
         );
       }
     }
@@ -93,7 +118,7 @@ export default {
         if (!body.refresh_token) {
           return new Response(
             JSON.stringify({ error: "missing_params", message: "Falta refresh_token" }),
-            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) } }
           );
         }
 
@@ -118,19 +143,19 @@ export default {
               error: data.error || "refresh_failed",
               error_description: data.error_description,
             }),
-            { status: response.status, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+            { status: response.status, headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) } }
           );
         }
 
         // Google devuelve access_token, expires_in, token_type (no incluye refresh_token de nuevo)
         return new Response(JSON.stringify(data), {
           status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders(origin) },
+          headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) },
         });
       } catch (err) {
         return new Response(
           JSON.stringify({ error: "internal_error", message: "Error en el servidor" }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) } }
         );
       }
     }
@@ -148,7 +173,7 @@ export default {
         if (!body.code || !body.code_verifier || !body.redirect_uri) {
           return new Response(
             JSON.stringify({ error: "missing_params", message: "Faltan code, code_verifier o redirect_uri" }),
-            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) } }
           );
         }
 
@@ -179,18 +204,18 @@ export default {
               error: data.error || "token_request_failed",
               error_description: data.error_description,
             }),
-            { status: response.status, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+            { status: response.status, headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) } }
           );
         }
 
         return new Response(text, {
           status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders(origin) },
+          headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) },
         });
       } catch (err) {
         return new Response(
           JSON.stringify({ error: "internal_error", message: "Error en el servidor" }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) } }
         );
       }
     }
@@ -203,7 +228,7 @@ export default {
         if (!body.refresh_token) {
           return new Response(
             JSON.stringify({ error: "missing_params", message: "Falta refresh_token" }),
-            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) } }
           );
         }
 
@@ -232,18 +257,18 @@ export default {
               error: data.error || "refresh_failed",
               error_description: data.error_description,
             }),
-            { status: response.status, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+            { status: response.status, headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) } }
           );
         }
 
         return new Response(text, {
           status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders(origin) },
+          headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) },
         });
       } catch (err) {
         return new Response(
           JSON.stringify({ error: "internal_error", message: "Error en el servidor" }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders(corsOrigin) } }
         );
       }
     }

@@ -20,6 +20,7 @@ import {
   CATEGORY_COLORS,
   getCategoryBgClass,
 } from "@/lib/category-colors";
+import { sanitize, MAX_FOLDER_NAME_LENGTH } from "@/lib/sanitize";
 
 export default function FoldersPage() {
   const { t } = useTranslation();
@@ -71,12 +72,12 @@ export default function FoldersPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) {
+    const safeName = sanitize(name, MAX_FOLDER_NAME_LENGTH);
+    if (!safeName) {
       setNameError(t("settings.folders.nameRequired"));
       return;
     }
-    if (folders.some((f) => f.name.trim().toLowerCase() === trimmed.toLowerCase() && f.id !== editingFolder?.id)) {
+    if (folders.some((f) => f.name.trim().toLowerCase() === safeName.toLowerCase() && f.id !== editingFolder?.id)) {
       setNameError(t("settings.folders.nameExists"));
       return;
     }
@@ -84,11 +85,11 @@ export default function FoldersPage() {
     setSaveErrorClassification(null);
     try {
       if (editingFolder) {
-        updateFolder(editingFolder.id, { name: trimmed, color: color || undefined });
+        updateFolder(editingFolder.id, { name: safeName, color: color || undefined });
       } else {
         addFolder({
           id: crypto.randomUUID(),
-          name: trimmed,
+          name: safeName,
           color: color || undefined,
         });
       }
@@ -287,6 +288,7 @@ export default function FoldersPage() {
                     if (nameError) setNameError("");
                   }}
                   placeholder={t("settings.folders.namePlaceholder")}
+                  maxLength={MAX_FOLDER_NAME_LENGTH}
                   className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   autoFocus
                 />

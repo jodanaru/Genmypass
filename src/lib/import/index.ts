@@ -13,6 +13,7 @@ import {
   DEFAULT_argon2_PARAMS,
 } from "@/lib/crypto";
 import type { VaultEntry, Folder } from "@/stores/vault-store";
+import { sanitize } from "@/lib/sanitize";
 
 export const MAX_IMPORT_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -27,17 +28,6 @@ export interface ImportResult {
 
 export interface ImportOptions {
   merge?: boolean;
-}
-
-const MAX_FIELD_LENGTH = 2048;
-const CONTROL_CHARS = /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g;
-
-function sanitize(str: string): string {
-  if (typeof str !== "string") return "";
-  const trimmed = str.replace(CONTROL_CHARS, "").trim();
-  return trimmed.length > MAX_FIELD_LENGTH
-    ? trimmed.slice(0, MAX_FIELD_LENGTH)
-    : trimmed;
 }
 
 function ensureId(): string {

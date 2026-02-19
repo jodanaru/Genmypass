@@ -33,6 +33,13 @@ import {
 } from "@/lib/password-generator";
 import { checkPasswordBreach } from "@/lib/hibp";
 import { BreachWarning } from "@/components/vault";
+import {
+  sanitize,
+  sanitizeUrl,
+  MAX_TITLE_LENGTH,
+  MAX_USERNAME_LENGTH,
+  MAX_NOTES_LENGTH,
+} from "@/lib/sanitize";
 
 interface LocationState {
   generatedPassword?: string;
@@ -239,35 +246,40 @@ export default function EntryFormPage() {
     e.preventDefault();
     setNameError("");
     setSaveErrorClassification(null);
-    const trimmedTitle = title.trim();
-    if (!trimmedTitle) {
+    const safeTitle = sanitize(title, MAX_TITLE_LENGTH);
+    if (!safeTitle) {
       setNameError(t("entry.nameRequired"));
       return;
     }
+    const safeUsername = sanitize(username, MAX_USERNAME_LENGTH);
+    const safeUrl = sanitizeUrl(url) || undefined;
+    const safeNotes = sanitize(notes, MAX_NOTES_LENGTH) || undefined;
+    const safeFolderId = folderId.trim() || undefined;
+
     setIsSaving(true);
     try {
       if (isNew) {
         const now = new Date().toISOString();
         addEntry({
           id: crypto.randomUUID(),
-          title: trimmedTitle,
-          username: username.trim(),
+          title: safeTitle,
+          username: safeUsername,
           password,
-          url: url.trim() || undefined,
-          notes: notes.trim() || undefined,
-          folderId: folderId.trim() || undefined,
+          url: safeUrl,
+          notes: safeNotes,
+          folderId: safeFolderId,
           favorite,
           createdAt: now,
           updatedAt: now,
         });
       } else if (id) {
         updateEntry(id, {
-          title: trimmedTitle,
-          username: username.trim(),
+          title: safeTitle,
+          username: safeUsername,
           password,
-          url: url.trim() || undefined,
-          notes: notes.trim() || undefined,
-          folderId: folderId.trim() || undefined,
+          url: safeUrl,
+          notes: safeNotes,
+          folderId: safeFolderId,
           favorite,
         });
       }
@@ -406,6 +418,7 @@ export default function EntryFormPage() {
                     if (nameError) setNameError("");
                   }}
                   placeholder={t("entry.placeholderName")}
+                  maxLength={MAX_TITLE_LENGTH}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 h-12 px-4 text-base placeholder:text-slate-400 disabled:opacity-50"
                   aria-required="true"
                   aria-invalid={!!nameError}
@@ -432,6 +445,7 @@ export default function EntryFormPage() {
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder={t("entry.placeholderUrl")}
+                    maxLength={2048}
                     className="flex-1 rounded-r-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 h-12 px-4 text-base placeholder:text-slate-400"
                   />
                 </div>
@@ -447,6 +461,7 @@ export default function EntryFormPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder={t("entry.placeholderUsername")}
+                  maxLength={MAX_USERNAME_LENGTH}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 h-12 px-4 text-base placeholder:text-slate-400"
                 />
               </label>
@@ -634,6 +649,7 @@ export default function EntryFormPage() {
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder={t("entry.notesPlaceholder")}
                   rows={4}
+                  maxLength={MAX_NOTES_LENGTH}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 min-h-[100px] p-4 text-base placeholder:text-slate-400 resize-y"
                 />
               </label>

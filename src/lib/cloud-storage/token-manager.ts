@@ -16,29 +16,11 @@ import {
 import type { CloudStorageProvider, TokenResponse } from "./types.js";
 
 const STORAGE_KEY = "ert";
-const SESSION_ACCESS_TOKEN = "genmypass_access_token";
-const SESSION_EXPIRES_AT = "genmypass_token_expires_at";
 const REFRESH_BEFORE_MS = 5 * 60 * 1000; // 5 min antes de expirar
 
 let currentAccessToken: string | null = null;
 let expiresAt: number | null = null;
 let refreshTimerId: ReturnType<typeof setTimeout> | null = null;
-
-function restoreFromSession(): boolean {
-  if (typeof sessionStorage === "undefined") return false;
-  const token = sessionStorage.getItem(SESSION_ACCESS_TOKEN);
-  const expiresStr = sessionStorage.getItem(SESSION_EXPIRES_AT);
-  if (!token || !expiresStr) return false;
-  const exp = parseInt(expiresStr, 10);
-  if (Number.isNaN(exp) || Date.now() >= exp) {
-    sessionStorage.removeItem(SESSION_ACCESS_TOKEN);
-    sessionStorage.removeItem(SESSION_EXPIRES_AT);
-    return false;
-  }
-  currentAccessToken = token;
-  expiresAt = exp;
-  return true;
-}
 
 export async function encryptRefreshToken(
   refreshToken: string,
@@ -79,15 +61,10 @@ export function getStoredRefreshToken(): string | null {
 export function setTokens(tokens: TokenResponse): void {
   currentAccessToken = tokens.access_token;
   expiresAt = Date.now() + tokens.expires_in * 1000;
-  if (typeof sessionStorage !== "undefined") {
-    sessionStorage.setItem(SESSION_ACCESS_TOKEN, tokens.access_token);
-    sessionStorage.setItem(SESSION_EXPIRES_AT, String(expiresAt));
-  }
 }
 
 export function getAccessToken(): string | null {
-  if (currentAccessToken !== null) return currentAccessToken;
-  return restoreFromSession() ? currentAccessToken : null;
+  return currentAccessToken;
 }
 
 export function getExpiresAt(): number | null {
@@ -159,8 +136,4 @@ export function clearSessionTokens(): void {
   stopAutoRefresh();
   currentAccessToken = null;
   expiresAt = null;
-  if (typeof sessionStorage !== "undefined") {
-    sessionStorage.removeItem(SESSION_ACCESS_TOKEN);
-    sessionStorage.removeItem(SESSION_EXPIRES_AT);
-  }
 }

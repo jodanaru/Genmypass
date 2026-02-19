@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Lock, Eye, EyeOff, Shield } from "lucide-react";
@@ -63,6 +63,31 @@ export default function LockScreenPage() {
   const [errorClassification, setErrorClassification] =
     useState<ApiErrorClassification | null>(null);
   const [needsSetupAgain, setNeedsSetupAgain] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startCooldown = useCallback((attempts: number) => {
+    const delay = Math.min(Math.pow(2, attempts), 30);
+    setCooldownSeconds(delay);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setCooldownSeconds((prev) => {
+        if (prev <= 1) {
+          if (cooldownRef.current) clearInterval(cooldownRef.current);
+          cooldownRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
 
   const needsReconnect = error === LOCK_NO_TOKEN_KEY;
   const errorDisplay = errorClassification
@@ -211,7 +236,6 @@ export default function LockScreenPage() {
       startAutoRefresh(key, provider);
       navigate("/vault", { replace: true });
     } catch (err) {
-      console.error("Unlock error:", err);
       const classification = classifyApiError(err);
       const message =
         err instanceof Error ? err.message : t(LOCK_WRONG_PASSWORD_KEY);
@@ -242,6 +266,9 @@ export default function LockScreenPage() {
         setError(LOCK_NO_TOKEN_KEY);
         setErrorClassification(null);
       } else {
+        const next = failedAttempts + 1;
+        setFailedAttempts(next);
+        if (next >= 3) startCooldown(next - 2);
         setError(null);
         setErrorClassification(classification);
       }
@@ -360,10 +387,12 @@ export default function LockScreenPage() {
           <button
             type="button"
             onClick={handleUnlock}
-            disabled={!password.trim() || isUnlocking}
+            disabled={!password.trim() || isUnlocking || cooldownSeconds > 0}
             className="w-full h-14 rounded-xl font-bold text-base text-white bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary-500/25 flex items-center justify-center gap-2"
           >
-            {isUnlocking ? (
+            {cooldownSeconds > 0 ? (
+              <span>{t("lock.cooldown", { seconds: cooldownSeconds })}</span>
+            ) : isUnlocking ? (
               <span className="flex items-center gap-2">
                 <svg
                   className="animate-spin w-5 h-5"

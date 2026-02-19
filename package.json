@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
+    "audit": "pnpm audit --audit-level moderate",
     "postinstall": "node scripts/postinstall-libsodium.mjs"
   },
   "dependencies": {

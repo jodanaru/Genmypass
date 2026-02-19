@@ -16,11 +16,15 @@ describe("hibp", () => {
   const originalDigest = crypto.subtle?.digest;
 
   beforeEach(() => {
+    vi.resetModules();
     vi.stubGlobal(
       "fetch",
       vi.fn(() => Promise.reject(new Error("fetch not mocked")))
     );
-    // Mock crypto.subtle.digest so SHA-1 is deterministic in tests
+    // Mock crypto.subtle.digest so SHA-1 is deterministic in tests.
+    // Each distinct input gets a unique stable hash to avoid cache collisions.
+    const hashMap = new Map<string, string>();
+    let counter = 0;
     if (crypto.subtle) {
       vi.spyOn(crypto.subtle, "digest").mockImplementation(
         async (_alg: string, data: BufferSource) => {
@@ -28,9 +32,10 @@ describe("hibp", () => {
           if (text === "password") {
             return hexToArrayBuffer(PASSWORD_SHA1_HEX);
           }
-          // For any other input, return a hash that won't match our mocked API response
-          const fakeHash = "0000000000000000000000000000000000000000";
-          return hexToArrayBuffer(fakeHash);
+          if (!hashMap.has(text)) {
+            hashMap.set(text, String(++counter).padStart(40, "0"));
+          }
+          return hexToArrayBuffer(hashMap.get(text)!);
         }
       );
     }

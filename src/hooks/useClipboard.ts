@@ -26,8 +26,7 @@ export function useClipboard() {
         }
 
         return true;
-      } catch (err) {
-        console.error("Error copying to clipboard:", err);
+      } catch {
         return false;
       }
     },

@@ -184,6 +184,7 @@
     "wrongPasswordOrError": "Contraseña incorrecta o error al cargar el vault.",
     "reconnectDrive": "Reconectar Google Drive",
     "setupAgain": "Configurar de nuevo",
+    "cooldown": "Espera {{seconds}}s",
     "encrypted": "Cifrado AES-256",
     "zeroKnowledge": "Zero Knowledge",
     "footer": "Protegido con cifrado de extremo a extremo. Tus datos nunca salen de tu dispositivo sin cifrar."
