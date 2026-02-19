@@ -7,6 +7,7 @@ interface PasswordCardProps {
   username: string;
   iconUrl?: string;
   iconBgColor?: string;
+  iconTextColor?: string;
   isFavorite?: boolean;
   lastUsed?: string;
   copySuccess?: boolean;
@@ -19,6 +20,7 @@ export function PasswordCard({
   title,
   username,
   iconBgColor = "bg-slate-100 dark:bg-slate-800",
+  iconTextColor = "text-slate-400 dark:text-slate-500",
   isFavorite = false,
   lastUsed,
   copySuccess = false,
@@ -45,7 +47,7 @@ export function PasswordCard({
         <div
           className={`${iconBgColor} aspect-square rounded-lg size-14 flex items-center justify-center shrink-0`}
         >
-          <span className="text-2xl font-bold text-slate-400 dark:text-slate-500">
+          <span className={`text-2xl font-bold ${iconTextColor}`}>
             {title[0]?.toUpperCase() ?? "?"}
           </span>
         </div>

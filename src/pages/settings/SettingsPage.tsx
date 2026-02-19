@@ -10,7 +10,6 @@ import {
   Database,
   Shield,
   ShieldAlert,
-  ExternalLink,
   ChevronRight,
   Upload,
   Download,
@@ -595,17 +594,15 @@ export default function SettingsPage() {
                 <option value="en">English</option>
               </select>
             </div>
-            <a
-              href="https://genmypass.app/terms"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to="/terms"
               className="px-6 py-4 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
             >
               <span className="text-sm font-medium text-slate-900 dark:text-white">
                 {t("settings.terms")}
               </span>
-              <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
-            </a>
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+            </Link>
             <Link
               to="/privacy"
               className="px-6 py-4 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"

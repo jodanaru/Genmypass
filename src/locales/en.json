@@ -668,5 +668,30 @@
     "contactTitle": "10. Contact",
     "contactText": "If you have questions about this privacy policy or about the processing of your data, you can contact us at:",
     "contactEmail": "info@genmypass.app"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: February 2026",
+    "backToHome": "Back to home",
+    "introTitle": "Introduction",
+    "introText": "These Terms of Service govern your use of Genmypass, a zero-knowledge password manager that stores your encrypted vault in your own cloud (Google Drive or Dropbox). By using the application, you agree to these terms.",
+    "acceptanceTitle": "1. Acceptance",
+    "acceptanceText": "By accessing or using Genmypass, you accept and agree to be bound by these Terms of Service. If you do not agree, please do not use the application.",
+    "serviceTitle": "2. Description of the Service",
+    "serviceText": "Genmypass is a free, client-side password manager. Your data is encrypted on your device (AES-256-GCM) before being stored in your personal cloud storage. We do not store your passwords, master password, or encryption keys. The OAuth proxy (Cloudflare Worker) only facilitates connection to your cloud provider and does not access your vault content.",
+    "noWarrantyTitle": "3. No Warranty",
+    "noWarrantyText": "Genmypass is provided \"as is\" without warranties of any kind. We do not guarantee uninterrupted availability, compatibility with all devices, or that the service will meet your specific needs. Use of the application is at your own risk.",
+    "responsibilityTitle": "4. Your Responsibility",
+    "responsibilityText": "You are responsible for:",
+    "responsibilityItem1": "Keeping your master password and optional secret key safe; we cannot recover them.",
+    "responsibilityItem2": "The security of the devices and browsers you use to access Genmypass.",
+    "responsibilityItem3": "Complying with the terms of your cloud provider (Google Drive/Dropbox) when storing your vault.",
+    "acceptableUseTitle": "5. Acceptable Use",
+    "acceptableUseText": "You agree to use Genmypass only for lawful purposes. You must not use the service to store or manage credentials for illegal activities, or to attempt to compromise the security or availability of the application or third-party services.",
+    "changesTitle": "6. Changes to the Terms",
+    "changesText": "We may update these Terms of Service from time to time. The date of the last update is shown at the top. Continued use of Genmypass after changes constitutes acceptance of the updated terms. We recommend reviewing this page periodically.",
+    "contactTitle": "7. Contact",
+    "contactText": "For questions about these Terms of Service, you can contact us at:",
+    "contactEmail": "info@genmypass.app"
   }
 }

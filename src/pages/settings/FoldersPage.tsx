@@ -19,6 +19,7 @@ import type { Folder as FolderType } from "@/stores/vault-store";
 import {
   CATEGORY_COLORS,
   getCategoryBgClass,
+  getCategoryTextClass,
 } from "@/lib/category-colors";
 import { sanitize, MAX_FOLDER_NAME_LENGTH } from "@/lib/sanitize";
 
@@ -204,7 +205,7 @@ export default function FoldersPage() {
                         folder.color
                       )}`}
                     >
-                      <Folder className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                      <Folder className={`w-5 h-5 ${getCategoryTextClass(folder.color)}`} />
                     </div>
                     <div className="min-w-0">
                       <p className="text-slate-900 dark:text-white font-medium truncate">
@@ -300,16 +301,16 @@ export default function FoldersPage() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   {t("settings.folders.color")}
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   {CATEGORY_COLORS.map((c) => (
                     <button
                       key={c.value}
                       type="button"
                       onClick={() => setColor(c.value)}
-                      className={`w-8 h-8 rounded-full ${c.bg} border-2 transition-all ${
+                      className={`w-8 h-8 rounded-full ${c.swatch} border-2 transition-all ${
                         color === c.value
-                          ? "border-primary-500 ring-2 ring-primary-500/30"
-                          : "border-transparent hover:border-slate-300 dark:hover:border-slate-600"
+                          ? "border-white dark:border-white ring-2 ring-primary-500 scale-110"
+                          : "border-transparent hover:scale-110 hover:border-white/50 dark:hover:border-white/30"
                       }`}
                       aria-label={`Color ${c.value}`}
                     />

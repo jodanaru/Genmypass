@@ -668,5 +668,30 @@
     "contactTitle": "10. Contacto",
     "contactText": "Si tienes preguntas sobre esta política de privacidad o sobre el tratamiento de tus datos, puedes contactar con nosotros en:",
     "contactEmail": "info@genmypass.app"
+  },
+  "terms": {
+    "title": "Términos de Servicio",
+    "lastUpdated": "Última actualización: febrero de 2026",
+    "backToHome": "Volver al inicio",
+    "introTitle": "Introducción",
+    "introText": "Estos Términos de Servicio rigen el uso de Genmypass, un gestor de contraseñas zero-knowledge que almacena tu bóveda cifrada en tu propia nube (Google Drive o Dropbox). Al utilizar la aplicación, aceptas estos términos.",
+    "acceptanceTitle": "1. Aceptación",
+    "acceptanceText": "Al acceder o usar Genmypass, aceptas y te comprometes a cumplir estos Términos de Servicio. Si no estás de acuerdo, no utilices la aplicación.",
+    "serviceTitle": "2. Descripción del servicio",
+    "serviceText": "Genmypass es un gestor de contraseñas gratuito y del lado del cliente. Tus datos se cifran en tu dispositivo (AES-256-GCM) antes de guardarse en tu almacenamiento en la nube personal. No almacenamos tus contraseñas, contraseña maestra ni claves de cifrado. El proxy OAuth (Cloudflare Worker) solo facilita la conexión con tu proveedor de nube y no accede al contenido de tu bóveda.",
+    "noWarrantyTitle": "3. Sin garantías",
+    "noWarrantyText": "Genmypass se ofrece \"tal cual\", sin garantías de ningún tipo. No garantizamos disponibilidad ininterrumpida, compatibilidad con todos los dispositivos ni que el servicio cubra tus necesidades concretas. El uso de la aplicación es bajo tu propia responsabilidad.",
+    "responsibilityTitle": "4. Tu responsabilidad",
+    "responsibilityText": "Eres responsable de:",
+    "responsibilityItem1": "Mantener segura tu contraseña maestra y, en su caso, tu clave secreta; no podemos recuperarlas.",
+    "responsibilityItem2": "La seguridad de los dispositivos y navegadores que uses para acceder a Genmypass.",
+    "responsibilityItem3": "Cumplir los términos de tu proveedor de nube (Google Drive/Dropbox) al almacenar tu bóveda.",
+    "acceptableUseTitle": "5. Uso aceptable",
+    "acceptableUseText": "Te comprometes a usar Genmypass solo para fines lícitos. No debes utilizar el servicio para almacenar o gestionar credenciales de actividades ilegales, ni para intentar comprometer la seguridad o disponibilidad de la aplicación o de servicios de terceros.",
+    "changesTitle": "6. Cambios en los términos",
+    "changesText": "Podemos actualizar estos Términos de Servicio de vez en cuando. La fecha de última actualización se indica al inicio. El uso continuado de Genmypass tras los cambios implica la aceptación de los términos actualizados. Te recomendamos revisar esta página periódicamente.",
+    "contactTitle": "7. Contacto",
+    "contactText": "Para consultas sobre estos Términos de Servicio, puedes contactar con nosotros en:",
+    "contactEmail": "info@genmypass.app"
   }
 }

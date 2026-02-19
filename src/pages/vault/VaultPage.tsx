@@ -18,7 +18,7 @@ import { useVault } from "@/hooks/useVault";
 import { useClipboard } from "@/hooks/useClipboard";
 import { useVaultStore } from "@/stores/vault-store";
 import type { VaultEntry, Folder } from "@/stores/vault-store";
-import { getCategoryBgClass, UNCATEGORIZED_BG } from "@/lib/category-colors";
+import { getCategoryBgClass, getCategoryTextClass, UNCATEGORIZED_BG, UNCATEGORIZED_TEXT } from "@/lib/category-colors";
 import { useFormatRelative } from "@/lib/format-relative";
 
 type FilterTab = "all" | "favorites" | "recent";
@@ -33,6 +33,12 @@ function getEntryIconBg(entry: VaultEntry, folders: Folder[]): string {
   if (!entry.folderId) return UNCATEGORIZED_BG;
   const folder = folders.find((f) => f.id === entry.folderId);
   return folder ? getCategoryBgClass(folder.color) : UNCATEGORIZED_BG;
+}
+
+function getEntryIconText(entry: VaultEntry, folders: Folder[]): string {
+  if (!entry.folderId) return UNCATEGORIZED_TEXT;
+  const folder = folders.find((f) => f.id === entry.folderId);
+  return folder ? getCategoryTextClass(folder.color) : UNCATEGORIZED_TEXT;
 }
 
 export default function VaultPage() {
@@ -348,6 +354,7 @@ export default function VaultPage() {
                 title={entry.title}
                 username={entry.username}
                 iconBgColor={getEntryIconBg(entry, folders)}
+                iconTextColor={getEntryIconText(entry, folders)}
                 isFavorite={entry.favorite}
                 lastUsed={formatRelative(entry.updatedAt)}
                 copySuccess={copiedEntryId === entry.id}
