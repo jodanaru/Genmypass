@@ -97,12 +97,157 @@
   color: #2563eb;
 }
 
+.slides-page.dark .reveal .controls {
+  color: #e2e8f0;
+}
+
 .slides-page:not(.dark) .reveal .progress {
   color: #2563eb;
 }
 
 .slides-page:not(.dark) .reveal .progress span {
   background: #2563eb;
+}
+
+.slides-page.dark .reveal .progress span {
+  background: #60a5fa;
+}
+
+/* ====================================================================
+   Móvil / iPhone: navegación por swipe + indicadores visuales
+   ==================================================================== */
+
+/* -- Contador de slides -- */
+.mobile-slide-counter {
+  position: fixed;
+  bottom: max(16px, env(safe-area-inset-bottom, 16px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.slides-page:not(.dark) .mobile-slide-counter {
+  background: rgba(0, 0, 0, 0.08);
+  color: #475569;
+}
+
+/* -- Hint de swipe (se desvanece después de 3s) -- */
+.mobile-swipe-hint {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 150;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  pointer-events: none;
+  animation: fadeInOut 4s ease-in-out;
+  opacity: 0;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* -- Grids a una columna en móvil -- */
+.slides-mobile .problem-grid,
+.slides-mobile .feature-grid {
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
+}
+
+.slides-mobile .stack-grid {
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
+}
+
+.slides-mobile .compare-grid {
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  font-size: 0.65rem;
+}
+
+/* -- Diagramas de arquitectura y flujo: apilar verticalmente -- */
+.slides-mobile .arch-diagram,
+.slides-mobile .security-flow {
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.slides-mobile .arch-arrow,
+.slides-mobile .flow-arrow {
+  transform: rotate(90deg);
+  padding: 0.2rem 0;
+  min-width: auto;
+}
+
+.slides-mobile .arch-box {
+  min-width: 0;
+  width: 100%;
+}
+
+.slides-mobile .flow-step {
+  min-width: 0;
+  width: 100%;
+}
+
+.slides-mobile .arch-highlights {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* -- Texto más grande dentro de las slides para que sea legible -- */
+.slides-mobile .reveal .slides section h1 {
+  font-size: 1.6rem !important;
+}
+
+.slides-mobile .reveal .slides section h2 {
+  font-size: 1.3rem !important;
+}
+
+.slides-mobile .reveal .slides section h3 {
+  font-size: 1.1rem !important;
+}
+
+.slides-mobile .reveal .slides section p,
+.slides-mobile .reveal .slides section li,
+.slides-mobile .reveal .slides section span {
+  font-size: 0.85rem !important;
+}
+
+.slides-mobile .problem-card h4,
+.slides-mobile .feature-card h4,
+.slides-mobile .stack-column h4,
+.slides-mobile .hibp-section h4 {
+  font-size: 0.9rem !important;
+}
+
+.slides-mobile .problem-card p,
+.slides-mobile .feature-card li,
+.slides-mobile .stack-column li {
+  font-size: 0.78rem !important;
+}
+
+/* -- Slide con scroll: más espacio en móvil -- */
+.slides-mobile .reveal .slides section.slide--scroll {
+  padding: 0.8rem 1rem 1.5rem !important;
+  max-height: 90vh !important;
 }
 
 /* ====================================================================
