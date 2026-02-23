@@ -133,7 +133,7 @@ export default function PrivacyPolicyPage() {
 
       {/* Footer */}
       <footer className="py-8 text-center text-slate-400 dark:text-slate-500 text-sm border-t border-slate-200 dark:border-slate-700/50">
-        <p>{t("landing.footer")}</p>
+        <p>{t("landing.footer", { year: new Date().getFullYear() })}</p>
       </footer>
     </div>
   );

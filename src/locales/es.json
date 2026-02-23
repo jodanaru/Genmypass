@@ -11,7 +11,7 @@
     "featureEncryptionDesc": "Seguridad de nivel militar",
     "getStarted": "Comenzar",
     "presentation": "Presentación",
-    "footer": "© 2024 Genmypass. Hecho con ❤️ para tu seguridad.",
+    "footer": "© {{year}} Genmypass. Hecho con ❤️ para tu seguridad.",
     "privacyPolicy": "Política de privacidad"
   },
   "nav": {

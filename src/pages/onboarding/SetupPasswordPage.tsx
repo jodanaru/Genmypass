@@ -445,7 +445,7 @@ export default function SetupPasswordPage() {
       </main>
 
       <footer className="py-8 px-6 text-center text-slate-400 dark:text-slate-500 text-xs">
-        <p>© 2024 Genmypass. {t("landing.featureEncryption")}.</p>
+        <p>© {new Date().getFullYear()} Genmypass. {t("landing.featureEncryption")}.</p>
       </footer>
 
       {/* Zero-knowledge modal */}
